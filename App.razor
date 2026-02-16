@@ -1,0 +1,80 @@
+@using OutlookPlugin.Services
+@using OutlookPlugin.Pages
+@using Microsoft.JSInterop
+@inject AppState AppState
+@inject OutlookService OutlookService
+@implements IDisposable
+
+@* State-based routing for Outlook iframe sandbox compatibility *@
+@switch (AppState.CurrentPage)
+{
+    case AppPage.Auth:
+        <Auth />
+        break;
+    case AppPage.Home:
+        <Home />
+        break;
+    case AppPage.Email:
+        <Email />
+        break;
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Register for email changed events to keep plugin in sync
+            await OutlookService.RegisterItemChangedHandlerAsync(this);
+        }
+    }
+
+    /// <summary>
+    /// Called from JavaScript when the user switches to a different email
+    /// </summary>
+    [JSInvokable]
+    public async Task OnEmailChanged(EmailInfo? emailInfo)
+    {
+        Console.WriteLine($"Email changed: {emailInfo?.Subject ?? "null"}");
+        
+        if (emailInfo != null)
+        {
+            var context = new EmailContext
+            {
+                ItemId = emailInfo.ItemId,
+                ConversationId = emailInfo.ConversationId,
+                Subject = emailInfo.Subject,
+                SenderName = emailInfo.Sender?.DisplayName,
+                SenderEmail = emailInfo.Sender?.EmailAddress,
+                Body = emailInfo.Body,
+                DateReceived = emailInfo.DateTimeCreated,
+                ItemType = emailInfo.ItemType,
+                Recipients = emailInfo.Recipients?.Select(r => new EmailParticipant
+                {
+                    Name = r.DisplayName,
+                    Email = r.EmailAddress,
+                    Type = r.RecipientType
+                }).ToList()
+            };
+            
+            AppState.SetEmailContext(context);
+        }
+        else
+        {
+            AppState.SetEmailContext(null);
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+        // Note: Can't await in Dispose, but the handler will be cleaned up on page unload
+    }
+}

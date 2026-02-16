@@ -1,0 +1,145 @@
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Layout
+@inject AppState AppState
+
+<Shell ShowTabs="false" ShowCopilot="false">
+    <div class="auth-container">
+        <div class="w-full max-w-sm">
+            @* Header *@
+            <div class="text-center mb-8">
+                <div class="auth-logo">
+                    <CloudIcon Class="w-8 h-8 text-primary" />
+                </div>
+                <h1 class="text-xl font-bold text-gray-900 mb-2">Welcome to CRM Insight</h1>
+                <p class="text-sm text-secondary">Connect your account to get started</p>
+            </div>
+
+            @if (mode == AuthMode.Connecting)
+            {
+                <div class="flex flex-col items-center gap-4 py-8 animate-fade-in">
+                    <span class="spinner spinner-lg text-primary"></span>
+                    <p class="text-sm text-secondary">Connecting to your account...</p>
+                </div>
+            }
+
+            @if (mode == AuthMode.Select)
+            {
+                <div class="space-y-4 animate-fade-in">
+                    @* Microsoft Sign In *@
+                    <button class="btn btn-primary btn-lg w-full" @onclick="HandleMicrosoftSignIn">
+                        <svg class="w-5 h-5" viewBox="0 0 21 21">
+                            <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+                            <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+                            <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+                            <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+                        </svg>
+                        Sign in with Microsoft
+                    </button>
+
+                    <div class="divider">or</div>
+
+                    @* Salesforce Sign In *@
+                    <button class="btn btn-secondary btn-lg w-full" @onclick="HandleSalesforceSignIn">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#00A1E0">
+                            <path d="M10.006 5.415c.699-.716 1.663-1.159 2.735-1.159 1.392 0 2.612.755 3.27 1.87a4.296 4.296 0 011.656-.332c2.39 0 4.333 1.943 4.333 4.333 0 2.39-1.943 4.333-4.333 4.333-.278 0-.55-.027-.813-.078-.576 1.278-1.87 2.167-3.367 2.167-.532 0-1.037-.111-1.497-.312-.674 1.43-2.134 2.423-3.823 2.423-1.78 0-3.304-1.101-3.929-2.661a3.604 3.604 0 01-.572.046c-2.007 0-3.633-1.626-3.633-3.633 0-1.476.881-2.746 2.142-3.315-.183-.471-.282-.981-.282-1.511 0-2.267 1.84-4.107 4.107-4.107 1.258 0 2.383.567 3.137 1.459l-.131-.523z" />
+                        </svg>
+                        Connect with Salesforce
+                    </button>
+
+                    <div class="divider">or use credentials</div>
+
+                    @* Credentials option *@
+                    <button class="btn btn-outline btn-lg w-full" @onclick="() => mode = AuthMode.Credentials">
+                        <KeyIcon Class="w-5 h-5" />
+                        Sign in with Credentials
+                    </button>
+                </div>
+            }
+
+            @if (mode == AuthMode.Credentials)
+            {
+                <div class="space-y-4 animate-fade-in">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text"
+                               class="input"
+                               placeholder="Enter your username"
+                               @bind="username"
+                               @bind:event="oninput" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password"
+                               class="input"
+                               placeholder="Enter your password"
+                               @bind="password"
+                               @bind:event="oninput" />
+                    </div>
+
+                    <button class="btn btn-primary btn-lg w-full"
+                            disabled="@(string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))"
+                            @onclick="HandleCredentialsSubmit">
+                        Sign In
+                    </button>
+
+                    <button class="btn btn-subtle w-full" @onclick="() => mode = AuthMode.Select">
+                        Back to sign in options
+                    </button>
+                </div>
+            }
+
+            @* Connect to CRM notice *@
+            @if (AppState.AuthProvider == AuthProvider.Microsoft && mode == AuthMode.Select)
+            {
+                <div class="notice-box mt-6">
+                    <p class="text-sm text-gray-700">
+                        <strong>Note:</strong> After signing in with Microsoft, you'll be prompted to connect to your CRM to access contextual data.
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</Shell>
+
+@code {
+    private enum AuthMode { Select, Credentials, Connecting }
+    private AuthMode mode = AuthMode.Select;
+    private string username = "";
+    private string password = "";
+
+    private async Task HandleMicrosoftSignIn()
+    {
+        AppState.SetAuthProvider(AuthProvider.Microsoft);
+        mode = AuthMode.Connecting;
+        StateHasChanged();
+
+        await Task.Delay(1500); // Simulate OAuth flow
+
+        // SetAuthStatus will auto-navigate to Home page
+        AppState.SetAuthStatus(AuthStatus.Authenticated);
+    }
+
+    private async Task HandleSalesforceSignIn()
+    {
+        AppState.SetAuthProvider(AuthProvider.Salesforce);
+        mode = AuthMode.Connecting;
+        StateHasChanged();
+
+        // ConnectToCrmAsync sets AuthStatus which auto-navigates
+        await AppState.ConnectToCrmAsync();
+    }
+
+    private async Task HandleCredentialsSubmit()
+    {
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) return;
+
+        mode = AuthMode.Connecting;
+        StateHasChanged();
+
+        await Task.Delay(1500); // Simulate auth
+
+        // SetAuthStatus will auto-navigate to Home page
+        AppState.SetAuthStatus(AuthStatus.Authenticated);
+    }
+}

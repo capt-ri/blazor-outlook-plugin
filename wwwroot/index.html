@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>CRM Insight - Outlook Plugin</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    
+    <!-- Office JavaScript API - Required for Outlook Add-ins -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    
+    <script>
+        // CRITICAL: Polyfill history API for Outlook iframe sandbox
+        // Outlook add-ins run in a sandboxed iframe where history.pushState/replaceState are blocked
+        (function() {
+            // Store original functions (they may be undefined or throw errors)
+            var currentPath = '/';
+            
+            // Create safe no-op versions that don't throw errors
+            if (!window.history.pushState || typeof window.history.pushState !== 'function') {
+                window.history.pushState = function(state, title, url) {
+                    currentPath = url || currentPath;
+                    console.log('[Outlook Sandbox] pushState intercepted:', url);
+                };
+            } else {
+                // Wrap existing function to catch errors
+                var originalPushState = window.history.pushState.bind(window.history);
+                window.history.pushState = function(state, title, url) {
+                    try {
+                        originalPushState(state, title, url);
+                    } catch (e) {
+                        currentPath = url || currentPath;
+                        console.log('[Outlook Sandbox] pushState error caught, using fallback');
+                    }
+                };
+            }
+            
+            if (!window.history.replaceState || typeof window.history.replaceState !== 'function') {
+                window.history.replaceState = function(state, title, url) {
+                    currentPath = url || currentPath;
+                    console.log('[Outlook Sandbox] replaceState intercepted:', url);
+                };
+            } else {
+                var originalReplaceState = window.history.replaceState.bind(window.history);
+                window.history.replaceState = function(state, title, url) {
+                    try {
+                        originalReplaceState(state, title, url);
+                    } catch (e) {
+                        currentPath = url || currentPath;
+                        console.log('[Outlook Sandbox] replaceState error caught, using fallback');
+                    }
+                };
+            }
+            
+            console.log('[Outlook Sandbox] History API polyfill installed');
+        })();
+    </script>
+</head>
+<body>
+    <div id="app" class="taskpane">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <span class="spinner spinner-lg text-primary mb-4"></span>
+                <p class="text-sm text-secondary">Loading CRM Insight...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui" style="display: none;">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script>
+        // Initialize Office.js
+        Office.onReady(function(info) {
+            console.log("Office.js initialized. Host: " + info.host + ", Platform: " + info.platform);
+        });
+
+        // Outlook JavaScript Interop functions for Blazor
+        window.outlookInterop = {
+            // Get email subject
+            getSubject: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            resolve(Office.context.mailbox.item.subject);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get email sender
+            getSender: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item && Office.context.mailbox.item.from) {
+                            var from = Office.context.mailbox.item.from;
+                            resolve({
+                                displayName: from.displayName,
+                                emailAddress: from.emailAddress
+                            });
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get email recipients (To and CC)
+            getRecipients: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        var recipients = [];
+                        var item = Office.context.mailbox.item;
+                        
+                        if (item) {
+                            // Add To recipients
+                            if (item.to) {
+                                item.to.forEach(function(r) {
+                                    recipients.push({
+                                        displayName: r.displayName,
+                                        emailAddress: r.emailAddress,
+                                        recipientType: 'To'
+                                    });
+                                });
+                            }
+                            
+                            // Add CC recipients
+                            if (item.cc) {
+                                item.cc.forEach(function(r) {
+                                    recipients.push({
+                                        displayName: r.displayName,
+                                        emailAddress: r.emailAddress,
+                                        recipientType: 'Cc'
+                                    });
+                                });
+                            }
+                        }
+                        
+                        resolve(recipients);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get email body (async)
+            getBody: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            Office.context.mailbox.item.body.getAsync(Office.CoercionType.Text, function(result) {
+                                if (result.status === Office.AsyncResultStatus.Succeeded) {
+                                    resolve(result.value);
+                                } else {
+                                    resolve(null);
+                                }
+                            });
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get item ID
+            getItemId: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            resolve(Office.context.mailbox.item.itemId);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get conversation ID
+            getConversationId: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            resolve(Office.context.mailbox.item.conversationId);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get date/time created
+            getDateTimeCreated: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            var date = Office.context.mailbox.item.dateTimeCreated;
+                            resolve(date ? date.toISOString() : null);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get complete email info
+            getCurrentEmailInfo: function() {
+                var self = this;
+                return new Promise(async function(resolve, reject) {
+                    try {
+                        var item = Office.context.mailbox.item;
+                        if (!item) {
+                            resolve(null);
+                            return;
+                        }
+
+                        var body = await self.getBody();
+                        var sender = await self.getSender();
+                        var recipients = await self.getRecipients();
+
+                        resolve({
+                            itemId: item.itemId,
+                            conversationId: item.conversationId,
+                            subject: item.subject,
+                            sender: sender,
+                            recipients: recipients,
+                            body: body,
+                            dateTimeCreated: item.dateTimeCreated ? item.dateTimeCreated.toISOString() : null,
+                            itemType: item.itemType
+                        });
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get current user email
+            getCurrentUserEmail: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.userProfile) {
+                            resolve(Office.context.mailbox.userProfile.emailAddress);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get item type (message or appointment)
+            getItemType: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            resolve(Office.context.mailbox.item.itemType);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Show notification
+            showNotification: function(message, type) {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item) {
+                            var notificationType = Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage;
+                            if (type === 'error') {
+                                notificationType = Office.MailboxEnums.ItemNotificationMessageType.ErrorMessage;
+                            } else if (type === 'progress') {
+                                notificationType = Office.MailboxEnums.ItemNotificationMessageType.ProgressIndicator;
+                            }
+                            
+                            Office.context.mailbox.item.notificationMessages.addAsync("crm-insight", {
+                                type: notificationType,
+                                message: message,
+                                icon: "icon-16",
+                                persistent: false
+                            }, function(result) {
+                                resolve(result.status === Office.AsyncResultStatus.Succeeded);
+                            });
+                        } else {
+                            resolve(false);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Add category to email
+            addCategory: function(category) {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item && Office.context.mailbox.item.categories) {
+                            Office.context.mailbox.item.categories.addAsync([category], function(result) {
+                                resolve(result.status === Office.AsyncResultStatus.Succeeded);
+                            });
+                        } else {
+                            resolve(false);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Register for item changed events (when user switches emails)
+            // Store the .NET object reference for callbacks
+            _dotNetHelper: null,
+            _currentItemId: null,
+
+            registerItemChangedHandler: function(dotNetHelper) {
+                this._dotNetHelper = dotNetHelper;
+                
+                // Store current item ID to detect changes
+                if (Office.context.mailbox && Office.context.mailbox.item) {
+                    this._currentItemId = Office.context.mailbox.item.itemId;
+                }
+
+                // Office.js doesn't have a direct "item changed" event in read mode
+                // But we can use addHandlerAsync for ItemChanged in supported versions
+                try {
+                    if (Office.context.mailbox && Office.context.mailbox.addHandlerAsync) {
+                        Office.context.mailbox.addHandlerAsync(
+                            Office.EventType.ItemChanged,
+                            this._onItemChanged.bind(this),
+                            function(result) {
+                                if (result.status === Office.AsyncResultStatus.Succeeded) {
+                                    console.log('[CRM Insight] Item changed handler registered');
+                                } else {
+                                    console.log('[CRM Insight] Could not register item changed handler:', result.error);
+                                }
+                            }
+                        );
+                    } else {
+                        console.log('[CRM Insight] ItemChanged event not supported in this Outlook version');
+                    }
+                } catch (e) {
+                    console.log('[CRM Insight] Error registering item changed handler:', e);
+                }
+            },
+
+            _onItemChanged: function(eventArgs) {
+                console.log('[CRM Insight] Item changed event fired');
+                var self = this;
+                
+                // Get new item info and notify Blazor
+                if (self._dotNetHelper) {
+                    self.getCurrentEmailInfo().then(function(emailInfo) {
+                        self._dotNetHelper.invokeMethodAsync('OnEmailChanged', emailInfo);
+                    }).catch(function(err) {
+                        console.log('[CRM Insight] Error getting email info on change:', err);
+                    });
+                }
+            },
+
+            unregisterItemChangedHandler: function() {
+                try {
+                    if (Office.context.mailbox && Office.context.mailbox.removeHandlerAsync) {
+                        Office.context.mailbox.removeHandlerAsync(
+                            Office.EventType.ItemChanged,
+                            { handler: this._onItemChanged },
+                            function(result) {
+                                console.log('[CRM Insight] Item changed handler removed');
+                            }
+                        );
+                    }
+                } catch (e) {
+                    console.log('[CRM Insight] Error removing handler:', e);
+                }
+                this._dotNetHelper = null;
+            }
+        };
+    </script>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

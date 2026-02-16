@@ -1,0 +1,143 @@
+@namespace OutlookPlugin.Components.Tabs
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Shared
+@inject AppState AppState
+@inject IJSRuntime JS
+
+<div class="p-3 space-y-6" role="tabpanel" id="track-panel">
+    @* Header *@
+    <div>
+        <h2 class="text-lg font-semibold text-gray-900">Track Email</h2>
+        <p class="text-sm text-secondary mt-1">Relate this email to contacts and accounts in your CRM</p>
+    </div>
+
+    @* Relate to Contacts *@
+    <section class="space-y-2">
+        <Autocomplete Label="Relate to Contacts"
+                      Options="ContactOptions"
+                      SelectedIds="AppState.Draft.RelatedContacts"
+                      OnSelect="HandleSelectContact"
+                      OnDeselect="HandleDeselectContact"
+                      Placeholder="Search contacts..."
+                      Multiple="true" />
+    </section>
+
+    @* Relate to Account or Opportunity *@
+    <section class="space-y-2">
+        <Autocomplete Label="Relate to Account or Opportunity"
+                      Options="AccountOptions"
+                      SelectedIds="AppState.Draft.RelatedAccounts"
+                      OnSelect="HandleSelectAccount"
+                      OnDeselect="HandleDeselectAccount"
+                      Placeholder="Search accounts..."
+                      Multiple="true" />
+    </section>
+
+    @* Notes *@
+    <section class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">Notes</label>
+        <textarea class="input textarea"
+                  placeholder="Add notes about this email..."
+                  rows="4"
+                  value="@notesValue"
+                  @oninput="HandleNotesChange"></textarea>
+    </section>
+
+    @* Dirty indicator *@
+    @if (AppState.Draft.IsDirty)
+    {
+        <div class="dirty-indicator">
+            <span class="dirty-dot"></span>
+            You have unsaved changes
+        </div>
+    }
+
+    @* Action Buttons *@
+    <div class="pt-2 border-t">
+        <div class="flex gap-2">
+            <button class="btn btn-outline flex-1"
+                    disabled="@(!AppState.Draft.IsDirty || AppState.IsLoading)"
+                    @onclick="HandleDiscard">
+                <DeleteIcon />
+                Discard
+            </button>
+            <button class="btn btn-primary flex-1"
+                    disabled="@(!AppState.Draft.IsDirty || AppState.IsLoading)"
+                    @onclick="HandleSave">
+                @if (AppState.IsLoading)
+                {
+                    <span class="spinner"></span>
+                }
+                else
+                {
+                    <SaveIcon />
+                }
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string notesValue = "";
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+        notesValue = AppState.Draft.Notes;
+    }
+
+    private List<Autocomplete.AutocompleteOption> ContactOptions =>
+        AppState.Contacts.Select(c => new Autocomplete.AutocompleteOption(c.Id, c.Name, c.Email)).ToList();
+
+    private List<Autocomplete.AutocompleteOption> AccountOptions =>
+        AppState.Accounts.Select(a => new Autocomplete.AutocompleteOption(a.Id, a.Name, a.Type)).ToList();
+
+    private void HandleSelectContact(string id)
+    {
+        AppState.UpdateDraft(d => d.RelatedContacts.Add(id));
+    }
+
+    private void HandleDeselectContact(string id)
+    {
+        AppState.UpdateDraft(d => d.RelatedContacts.Remove(id));
+    }
+
+    private void HandleSelectAccount(string id)
+    {
+        AppState.UpdateDraft(d => d.RelatedAccounts.Add(id));
+    }
+
+    private void HandleDeselectAccount(string id)
+    {
+        AppState.UpdateDraft(d => d.RelatedAccounts.Remove(id));
+    }
+
+    private void HandleNotesChange(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        AppState.UpdateDraft(d => d.Notes = value);
+    }
+
+    private async Task HandleSave()
+    {
+        await AppState.SaveDraftAsync();
+        notesValue = "";
+    }
+
+    private async Task HandleDiscard()
+    {
+        if (AppState.Draft.IsDirty)
+        {
+            var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to discard your changes?");
+            if (!confirmed) return;
+        }
+        AppState.DiscardDraft();
+        notesValue = "";
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

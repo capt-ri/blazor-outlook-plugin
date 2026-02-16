@@ -1,0 +1,136 @@
+@namespace OutlookPlugin.Components.Shared
+
+<div class="relative" @onfocusout="HandleFocusOut">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="block text-sm font-medium text-gray-700 mb-1">@Label</label>
+    }
+
+    @* Selected tags *@
+    @if (Multiple && SelectedIds.Any())
+    {
+        <div class="flex flex-wrap gap-1 mb-2">
+            @foreach (var id in SelectedIds)
+            {
+                var option = Options.FirstOrDefault(o => o.Id == id);
+                if (option != null)
+                {
+                    <span class="selected-tag">
+                        @option.Label
+                        <button class="selected-tag-remove" @onclick="() => HandleDeselect(id)" @onclick:stopPropagation="true">
+                            <svg class="w-3 h-3" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M9.5 3.205L8.795 2.5 6 5.295 3.205 2.5l-.705.705L5.295 6 2.5 8.795l.705.705L6 6.705 8.795 9.5l.705-.705L6.705 6z" />
+                            </svg>
+                        </button>
+                    </span>
+                }
+            }
+        </div>
+    }
+
+    @* Input *@
+    <div class="relative">
+        <span class="search-icon">
+            <SearchIcon />
+        </span>
+        <input type="text"
+               class="input search-input"
+               placeholder="@Placeholder"
+               value="@query"
+               @oninput="HandleInput"
+               @onfocus="() => isOpen = true" />
+        @if (IsLoading)
+        {
+            <span class="absolute right-3 top-1/2 -translate-y-1/2">
+                <span class="spinner"></span>
+            </span>
+        }
+    </div>
+
+    @* Dropdown *@
+    @if (isOpen && FilteredOptions.Any())
+    {
+        <div class="autocomplete-dropdown animate-fade-in">
+            @foreach (var option in FilteredOptions)
+            {
+                var isSelected = SelectedIds.Contains(option.Id);
+                <button class="autocomplete-option @(isSelected ? "selected" : "")"
+                        @onclick="() => HandleSelect(option.Id)">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-900 truncate">@option.Label</p>
+                        @if (!string.IsNullOrEmpty(option.Sublabel))
+                        {
+                            <p class="text-xs text-secondary truncate">@option.Sublabel</p>
+                        }
+                    </div>
+                    @if (isSelected)
+                    {
+                        <CheckmarkIcon Class="text-primary flex-shrink-0" />
+                    }
+                </button>
+            }
+        </div>
+    }
+
+    @if (isOpen && !FilteredOptions.Any() && !string.IsNullOrEmpty(query))
+    {
+        <div class="autocomplete-dropdown animate-fade-in p-3">
+            <p class="text-sm text-secondary text-center">No results found</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<AutocompleteOption> Options { get; set; } = new();
+    [Parameter] public List<string> SelectedIds { get; set; } = new();
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+    [Parameter] public EventCallback<string> OnDeselect { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool Multiple { get; set; } = true;
+
+    private string query = "";
+    private bool isOpen;
+
+    public record AutocompleteOption(string Id, string Label, string? Sublabel = null);
+
+    private IEnumerable<AutocompleteOption> FilteredOptions => Options.Where(o =>
+        o.Label.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+        (o.Sublabel?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        query = e.Value?.ToString() ?? "";
+        isOpen = true;
+    }
+
+    private async Task HandleSelect(string id)
+    {
+        if (SelectedIds.Contains(id))
+        {
+            await OnDeselect.InvokeAsync(id);
+        }
+        else
+        {
+            await OnSelect.InvokeAsync(id);
+            if (!Multiple)
+            {
+                isOpen = false;
+                query = "";
+            }
+        }
+    }
+
+    private async Task HandleDeselect(string id)
+    {
+        await OnDeselect.InvokeAsync(id);
+    }
+
+    private async Task HandleFocusOut()
+    {
+        // Delay to allow click events to fire first
+        await Task.Delay(200);
+        isOpen = false;
+    }
+}

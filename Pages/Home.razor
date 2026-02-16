@@ -1,0 +1,89 @@
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Layout
+@using OutlookPlugin.Components.Tabs
+@inject AppState AppState
+@inject OutlookService OutlookService
+@implements IDisposable
+
+<Shell ShowTabs="true" ShowCopilot="true">
+    <div class="animate-fade-in">
+        @* Email context banner *@
+        @if (AppState.CurrentEmail != null && !string.IsNullOrEmpty(AppState.CurrentEmail.Subject))
+        {
+            <div class="p-3 bg-primary-light border-b text-sm">
+                <div class="font-medium text-primary truncate">@AppState.CurrentEmail.Subject</div>
+                <div class="text-secondary text-xs mt-1">
+                    From: @(AppState.CurrentEmail.SenderName ?? AppState.CurrentEmail.SenderEmail)
+                </div>
+            </div>
+        }
+        
+        @switch (AppState.ActiveTab)
+        {
+            case ActiveTab.Related:
+                <RelatedTab />
+                break;
+            case ActiveTab.Track:
+                <TrackTab />
+                break;
+            case ActiveTab.Actions:
+                <ActionsTab />
+                break;
+        }
+    </div>
+</Shell>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadEmailContextAsync();
+        }
+    }
+    
+    private async Task LoadEmailContextAsync()
+    {
+        try
+        {
+            var emailInfo = await OutlookService.GetCurrentEmailInfoAsync();
+            
+            if (emailInfo != null)
+            {
+                var context = new EmailContext
+                {
+                    ItemId = emailInfo.ItemId,
+                    ConversationId = emailInfo.ConversationId,
+                    Subject = emailInfo.Subject,
+                    SenderName = emailInfo.Sender?.DisplayName,
+                    SenderEmail = emailInfo.Sender?.EmailAddress,
+                    Body = emailInfo.Body,
+                    DateReceived = emailInfo.DateTimeCreated,
+                    ItemType = emailInfo.ItemType,
+                    Recipients = emailInfo.Recipients?.Select(r => new EmailParticipant
+                    {
+                        Name = r.DisplayName,
+                        Email = r.EmailAddress,
+                        Type = r.RecipientType
+                    }).ToList()
+                };
+                
+                AppState.SetEmailContext(context);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading email context: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

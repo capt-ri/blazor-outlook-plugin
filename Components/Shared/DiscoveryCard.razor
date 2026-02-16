@@ -1,0 +1,42 @@
+@namespace OutlookPlugin.Components.Shared
+@using OutlookPlugin.Services
+
+<div class="discovery-card">
+    <div class="avatar avatar-sm avatar-event">
+        <MailIcon />
+    </div>
+
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+            <p class="text-sm font-medium text-gray-900 truncate">
+                @(Contact.Name ?? Contact.Email)
+            </p>
+            @if (Contact.IsNew)
+            {
+                <StatusBadge Status="StatusBadge.BadgeStatus.New" />
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(Contact.Name))
+        {
+            <p class="text-xs text-secondary truncate">@Contact.Email</p>
+        }
+    </div>
+
+    <button class="btn btn-primary btn-sm" @onclick="HandleQuickTrack">
+        <PersonAddIcon Class="icon-sm" />
+        Track
+    </button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DiscoveredContact Contact { get; set; } = default!;
+    [Parameter] public EventCallback OnQuickTrack { get; set; }
+
+    private async Task HandleQuickTrack()
+    {
+        if (OnQuickTrack.HasDelegate)
+        {
+            await OnQuickTrack.InvokeAsync();
+        }
+    }
+}

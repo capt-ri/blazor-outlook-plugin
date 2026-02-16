@@ -1,0 +1,47 @@
+@namespace OutlookPlugin.Components.Shared
+
+<span class="badge @BadgeClass">
+    @if (Status == BadgeStatus.Tracked)
+    {
+        <CheckmarkIcon Class="icon-sm" />
+    }
+    else if (Status == BadgeStatus.NotTracked)
+    {
+        <DismissIcon Class="icon-sm" />
+    }
+    else if (Status == BadgeStatus.InCrm)
+    {
+        <CheckmarkIcon Class="icon-sm" />
+    }
+    @StatusText
+</span>
+
+@code {
+    [Parameter] public BadgeStatus Status { get; set; } = BadgeStatus.NotTracked;
+    
+    public enum BadgeStatus
+    {
+        Tracked,
+        NotTracked,
+        InCrm,
+        New
+    }
+    
+    private string BadgeClass => Status switch
+    {
+        BadgeStatus.Tracked => "badge-tracked",
+        BadgeStatus.NotTracked => "badge-not-tracked",
+        BadgeStatus.InCrm => "badge-in-crm",
+        BadgeStatus.New => "badge-new",
+        _ => "badge-not-tracked"
+    };
+    
+    private string StatusText => Status switch
+    {
+        BadgeStatus.Tracked => "Tracked",
+        BadgeStatus.NotTracked => "Not Tracked",
+        BadgeStatus.InCrm => "In CRM",
+        BadgeStatus.New => "New",
+        _ => "Not Tracked"
+    };
+}

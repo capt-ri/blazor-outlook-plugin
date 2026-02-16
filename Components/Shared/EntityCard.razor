@@ -1,0 +1,109 @@
+@namespace OutlookPlugin.Components.Shared
+
+<article class="card animate-fade-in @(OnClick.HasDelegate ? "cursor-pointer" : "")" @onclick="HandleClick">
+    <div class="card-body">
+        <div class="flex items-start gap-3">
+            @* Avatar / Icon *@
+            <div class="avatar @AvatarClass">
+                @if (!string.IsNullOrEmpty(AvatarInitials))
+                {
+                    @AvatarInitials
+                }
+                else
+                {
+                    @switch (Type)
+                    {
+                        case EntityType.Contact:
+                            <PersonIcon />
+                            break;
+                        case EntityType.Account:
+                            <BuildingIcon />
+                            break;
+                        case EntityType.Event:
+                            <CalendarIcon />
+                            break;
+                    }
+                }
+            </div>
+
+            @* Content *@
+            <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900 truncate">@Title</h3>
+                        @if (!string.IsNullOrEmpty(Subtitle))
+                        {
+                            <p class="text-xs text-secondary truncate mt-1">@Subtitle</p>
+                        }
+                    </div>
+                    <button class="btn btn-subtle btn-sm" @onclick:stopPropagation="true">
+                        <MoreIcon />
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Description))
+                {
+                    <p class="text-xs text-secondary mt-1 truncate-2">@Description</p>
+                }
+
+                @ChildContent
+            </div>
+        </div>
+    </div>
+
+    @* Footer with status badge *@
+    <div class="card-footer">
+        <StatusBadge Status="@(IsTracked ? StatusBadge.BadgeStatus.Tracked : StatusBadge.BadgeStatus.NotTracked)" />
+        @if (OnTrack.HasDelegate)
+        {
+            <button class="btn @(IsTracked ? "btn-secondary" : "btn-primary") btn-sm" 
+                    @onclick="HandleTrack" 
+                    @onclick:stopPropagation="true">
+                @(IsTracked ? "Untrack" : "Track")
+            </button>
+        }
+    </div>
+</article>
+
+@code {
+    [Parameter] public EntityType Type { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool IsTracked { get; set; }
+    [Parameter] public string? AvatarInitials { get; set; }
+    [Parameter] public EventCallback OnTrack { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    public enum EntityType
+    {
+        Contact,
+        Account,
+        Event
+    }
+
+    private string AvatarClass => Type switch
+    {
+        EntityType.Contact => "avatar-contact",
+        EntityType.Account => "avatar-account",
+        EntityType.Event => "avatar-event",
+        _ => "avatar-contact"
+    };
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+
+    private async Task HandleTrack()
+    {
+        if (OnTrack.HasDelegate)
+        {
+            await OnTrack.InvokeAsync();
+        }
+    }
+}

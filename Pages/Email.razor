@@ -1,0 +1,263 @@
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Layout
+@inject AppState AppState
+@inject OutlookService OutlookService
+@implements IDisposable
+
+<Shell ShowTabs="false" ShowCopilot="false">
+    <div class="p-4 space-y-4">
+        @* Header with back button *@
+        <div class="flex items-center gap-3 mb-4">
+            <button class="btn btn-subtle" @onclick="GoBack" title="Back to Home">
+                <ChevronLeftIcon Class="w-5 h-5" />
+            </button>
+            <h1 class="text-lg font-semibold">Email Details</h1>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-8">
+                <span class="spinner spinner-lg text-primary mb-4"></span>
+                <p class="text-sm text-secondary">Loading email information...</p>
+            </div>
+        }
+        else if (AppState.CurrentEmail == null)
+        {
+            <div class="empty-state py-8">
+                <MailIcon Class="w-12 h-12 text-secondary mx-auto mb-4" />
+                <p class="text-secondary">No email selected</p>
+                <p class="text-xs text-secondary mt-2">Open an email in Outlook to see its details here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-4 animate-fade-in">
+                @* Subject *@
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-xs text-secondary font-medium mb-1">SUBJECT</div>
+                        <div class="font-semibold text-base">@(AppState.CurrentEmail.Subject ?? "No subject")</div>
+                    </div>
+                </div>
+
+                @* Sender *@
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-xs text-secondary font-medium mb-2">FROM</div>
+                        <div class="flex items-center gap-3">
+                            <div class="avatar avatar-contact">
+                                @GetInitials(AppState.CurrentEmail.SenderName ?? AppState.CurrentEmail.SenderEmail)
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-medium truncate">@(AppState.CurrentEmail.SenderName ?? "Unknown")</div>
+                                <div class="text-sm text-secondary truncate">@(AppState.CurrentEmail.SenderEmail ?? "")</div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(AppState.CurrentEmail.SenderEmail))
+                            {
+                                <button class="btn btn-sm btn-primary" @onclick="() => QuickTrackSender()">
+                                    <PersonAddIcon Class="w-4 h-4" />
+                                    Track
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* Recipients *@
+                @if (AppState.CurrentEmail.Recipients?.Any() == true)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-xs text-secondary font-medium mb-2">RECIPIENTS</div>
+                            <div class="space-y-2">
+                                @foreach (var recipient in AppState.CurrentEmail.Recipients)
+                                {
+                                    <div class="flex items-center gap-3 py-1">
+                                        <div class="avatar avatar-sm avatar-contact">
+                                            @GetInitials(recipient.Name ?? recipient.Email)
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-sm font-medium truncate">@(recipient.Name ?? recipient.Email)</div>
+                                            <div class="text-xs text-secondary">@recipient.Type</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @* Date & IDs *@
+                <div class="card">
+                    <div class="card-body space-y-3">
+                        @if (AppState.CurrentEmail.DateReceived.HasValue)
+                        {
+                            <div>
+                                <div class="text-xs text-secondary font-medium">DATE RECEIVED</div>
+                                <div class="text-sm">@AppState.CurrentEmail.DateReceived.Value.ToString("dddd, MMMM d, yyyy 'at' h:mm tt")</div>
+                            </div>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(AppState.CurrentEmail.ItemType))
+                        {
+                            <div>
+                                <div class="text-xs text-secondary font-medium">TYPE</div>
+                                <div class="text-sm">@AppState.CurrentEmail.ItemType</div>
+                            </div>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(AppState.CurrentEmail.ConversationId))
+                        {
+                            <div>
+                                <div class="text-xs text-secondary font-medium">CONVERSATION ID</div>
+                                <div class="text-xs text-secondary font-mono truncate">@AppState.CurrentEmail.ConversationId</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @* Body Preview *@
+                @if (!string.IsNullOrEmpty(AppState.CurrentEmail.Body))
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-xs text-secondary font-medium mb-2">BODY PREVIEW</div>
+                            <div class="text-sm text-secondary max-h-48 overflow-y-auto whitespace-pre-wrap">
+                                @TruncateBody(AppState.CurrentEmail.Body, 500)
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @* Actions *@
+                <div class="flex gap-2 pt-2">
+                    <button class="btn btn-primary flex-1" @onclick="TrackEmail">
+                        <CheckmarkIcon Class="w-4 h-4" />
+                        Track Email
+                    </button>
+                    <button class="btn btn-secondary flex-1" @onclick="RefreshEmail">
+                        <SyncIcon Class="w-4 h-4" />
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</Shell>
+
+@code {
+    private bool isLoading = true;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadEmailAsync();
+        }
+    }
+
+    private async Task LoadEmailAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var emailInfo = await OutlookService.GetCurrentEmailInfoAsync();
+
+            if (emailInfo != null)
+            {
+                var context = new EmailContext
+                {
+                    ItemId = emailInfo.ItemId,
+                    ConversationId = emailInfo.ConversationId,
+                    Subject = emailInfo.Subject,
+                    SenderName = emailInfo.Sender?.DisplayName,
+                    SenderEmail = emailInfo.Sender?.EmailAddress,
+                    Body = emailInfo.Body,
+                    DateReceived = emailInfo.DateTimeCreated,
+                    ItemType = emailInfo.ItemType,
+                    Recipients = emailInfo.Recipients?.Select(r => new EmailParticipant
+                    {
+                        Name = r.DisplayName,
+                        Email = r.EmailAddress,
+                        Type = r.RecipientType
+                    }).ToList()
+                };
+
+                AppState.SetEmailContext(context);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading email: {ex.Message}");
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task RefreshEmail()
+    {
+        await LoadEmailAsync();
+        await OutlookService.ShowNotificationAsync("Email info refreshed");
+    }
+
+    private async Task TrackEmail()
+    {
+        AppState.SetLoading(true);
+        await Task.Delay(500); // Simulate API call
+        AppState.SetLoading(false);
+        await OutlookService.ShowNotificationAsync("Email tracked to CRM!");
+    }
+
+    private void QuickTrackSender()
+    {
+        if (!string.IsNullOrEmpty(AppState.CurrentEmail?.SenderEmail))
+        {
+            // Add to discovered contacts if not already tracked
+            var existingContact = AppState.Contacts.FirstOrDefault(c =>
+                c.Email.Equals(AppState.CurrentEmail.SenderEmail, StringComparison.OrdinalIgnoreCase));
+
+            if (existingContact == null)
+            {
+                // This would typically call an API - for now just show notification
+                Console.WriteLine($"Would track: {AppState.CurrentEmail.SenderEmail}");
+            }
+        }
+    }
+
+    private void GoBack()
+    {
+        AppState.NavigateToPage(AppPage.Home);
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+
+        var parts = name.Split(' ', '@', '.').Where(p => !string.IsNullOrEmpty(p)).ToArray();
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        }
+        return name.Length >= 2 ? name.Substring(0, 2).ToUpper() : name.ToUpper();
+    }
+
+    private string TruncateBody(string body, int maxLength)
+    {
+        if (string.IsNullOrEmpty(body)) return "";
+        if (body.Length <= maxLength) return body;
+        return body.Substring(0, maxLength) + "...";
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

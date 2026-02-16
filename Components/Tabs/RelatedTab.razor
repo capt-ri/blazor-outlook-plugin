@@ -1,0 +1,173 @@
+@namespace OutlookPlugin.Components.Tabs
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Shared
+@inject AppState AppState
+
+<div class="p-3 space-y-4" role="tabpanel" id="related-panel">
+    @* Search *@
+    <SearchField Value="@AppState.SearchQuery"
+                 ValueChanged="HandleSearchChange"
+                 ShowFilter="true"
+                 ActiveFilter="activeFilter"
+                 ActiveFilterChanged="HandleFilterChange"
+                 Placeholder="Search contacts, accounts, events..." />
+
+    @* Contacts Section *@
+    @if (activeFilter == FilterType.All || activeFilter == FilterType.Contacts)
+    {
+        <section>
+            <SectionHeader IconName="person"
+                           Title="Contacts"
+                           Count="FilteredContacts.Count"
+                           Expanded="@contactsExpanded"
+                           OnToggle="ToggleContacts" />
+            @if (contactsExpanded)
+            {
+                <div class="space-y-2 mt-2">
+                    @if (!FilteredContacts.Any())
+                    {
+                        <div class="empty-state">No contacts found</div>
+                    }
+                    else
+                    {
+                        @foreach (var contact in FilteredContacts)
+                        {
+                            <EntityCard Type="EntityCard.EntityType.Contact"
+                                        Title="@contact.Name"
+                                        Subtitle="@contact.Email"
+                                        Description="@contact.Company"
+                                        IsTracked="@contact.IsTracked"
+                                        AvatarInitials="@contact.AvatarInitials"
+                                        OnTrack="() => AppState.TrackContact(contact.Id)" />
+                        }
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    @* Accounts Section *@
+    @if (activeFilter == FilterType.All || activeFilter == FilterType.Accounts)
+    {
+        <section>
+            <SectionHeader IconName="building"
+                           Title="Accounts"
+                           Count="FilteredAccounts.Count"
+                           Expanded="@accountsExpanded"
+                           OnToggle="ToggleAccounts" />
+            @if (accountsExpanded)
+            {
+                <div class="space-y-2 mt-2">
+                    @if (!FilteredAccounts.Any())
+                    {
+                        <div class="empty-state">No accounts found</div>
+                    }
+                    else
+                    {
+                        @foreach (var account in FilteredAccounts)
+                        {
+                            <EntityCard Type="EntityCard.EntityType.Account"
+                                        Title="@account.Name"
+                                        Subtitle="@account.Type"
+                                        IsTracked="@account.IsTracked"
+                                        OnTrack="() => AppState.TrackAccount(account.Id)" />
+                        }
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    @* Events Section *@
+    @if (activeFilter == FilterType.All || activeFilter == FilterType.Events)
+    {
+        <section>
+            <SectionHeader IconName="calendar"
+                           Title="Events"
+                           Count="FilteredEvents.Count"
+                           Expanded="@eventsExpanded"
+                           OnToggle="ToggleEvents" />
+            @if (eventsExpanded)
+            {
+                <div class="space-y-2 mt-2">
+                    @if (!FilteredEvents.Any())
+                    {
+                        <div class="empty-state">No events found</div>
+                    }
+                    else
+                    {
+                        @foreach (var evt in FilteredEvents)
+                        {
+                            <EntityCard Type="EntityCard.EntityType.Event"
+                                        Title="@evt.Title"
+                                        Subtitle="@FormatEventDate(evt.Date, evt.Time)"
+                                        Description="@GetAttendeesText(evt)"
+                                        IsTracked="@evt.IsTracked"
+                                        OnTrack="() => AppState.TrackEvent(evt.Id)" />
+                        }
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private FilterType activeFilter = FilterType.All;
+    private bool contactsExpanded = true;
+    private bool accountsExpanded = true;
+    private bool eventsExpanded = true;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    private List<Contact> FilteredContacts => AppState.Contacts
+        .Where(c => string.IsNullOrEmpty(AppState.SearchQuery) ||
+                    c.Name.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    c.Email.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Company?.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+    private List<Account> FilteredAccounts => AppState.Accounts
+        .Where(a => string.IsNullOrEmpty(AppState.SearchQuery) ||
+                    a.Name.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    a.Type.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private List<CalendarEvent> FilteredEvents => AppState.Events
+        .Where(e => string.IsNullOrEmpty(AppState.SearchQuery) ||
+                    e.Title.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    e.Attendees.Any(a => a.Contains(AppState.SearchQuery, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    private void HandleSearchChange(string value)
+    {
+        AppState.SetSearchQuery(value);
+    }
+
+    private void HandleFilterChange(FilterType filter)
+    {
+        activeFilter = filter;
+    }
+
+    private void ToggleContacts() => contactsExpanded = !contactsExpanded;
+    private void ToggleAccounts() => accountsExpanded = !accountsExpanded;
+    private void ToggleEvents() => eventsExpanded = !eventsExpanded;
+
+    private string FormatEventDate(DateTime date, string time)
+    {
+        return $"{date:ddd, MMM d} at {time}";
+    }
+
+    private string GetAttendeesText(CalendarEvent evt)
+    {
+        return $"Attendees: {string.Join(", ", evt.Attendees)}";
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

@@ -1,0 +1,57 @@
+@namespace OutlookPlugin.Components.Layout
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Shared
+@inject AppState AppState
+
+@if (AppState.DiscoveredContacts.Any())
+{
+    <div class="copilot-panel">
+        @* Header *@
+        <button class="copilot-header w-full" @onclick="AppState.ToggleCopilot" aria-expanded="@AppState.CopilotExpanded">
+            <div class="flex items-center gap-2">
+                <SparkleIcon Class="text-primary" />
+                <span class="text-sm font-semibold text-gray-900">Copilot Discovery</span>
+                <span class="px-2 py-1 text-xs font-medium bg-warning rounded-full" style="background-color: rgba(255, 185, 0, 0.2); color: var(--warning);">
+                    @AppState.DiscoveredContacts.Count new
+                </span>
+            </div>
+            @if (AppState.CopilotExpanded)
+            {
+                <ChevronUpIcon Class="text-secondary" />
+            }
+            else
+            {
+                <ChevronDownIcon Class="text-secondary" />
+            }
+        </button>
+
+        @* Content *@
+        @if (AppState.CopilotExpanded)
+        {
+            <div class="copilot-content animate-fade-in space-y-2">
+                <p class="text-xs text-secondary">New contacts found in this conversation</p>
+                @foreach (var contact in AppState.DiscoveredContacts)
+                {
+                    <DiscoveryCard Contact="contact" OnQuickTrack="() => HandleQuickTrack(contact.Id)" />
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    private void HandleQuickTrack(string id)
+    {
+        AppState.QuickTrackContact(id);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

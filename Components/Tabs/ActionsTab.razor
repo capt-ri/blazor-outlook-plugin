@@ -1,0 +1,91 @@
+@namespace OutlookPlugin.Components.Tabs
+@using OutlookPlugin.Services
+@inject AppState AppState
+
+<div class="p-3 space-y-6" role="tabpanel" id="actions-panel">
+    @* Header *@
+    <div>
+        <h2 class="text-lg font-semibold text-gray-900">Sales Engagement</h2>
+        <p class="text-sm text-secondary mt-1">Quick actions to engage with your contacts</p>
+    </div>
+
+    @* Available Actions *@
+    <section>
+        <h3 class="text-sm font-medium text-gray-700 mb-3">Available Actions</h3>
+        <div class="space-y-2">
+            @if (!AvailableActions.Any())
+            {
+                <div class="empty-state">All actions completed</div>
+            }
+            else
+            {
+                @foreach (var action in AvailableActions)
+                {
+                    <ActionCard Action="action"
+                                IsLoading="loadingId == action.Id"
+                                OnRun="() => HandleAction(action.Id)" />
+                }
+            }
+        </div>
+    </section>
+
+    @* Completed Actions *@
+    @if (CompletedActions.Any())
+    {
+        <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Completed</h3>
+            <div class="space-y-2">
+                @foreach (var action in CompletedActions)
+                {
+                    <ActionCard Action="action" IsLoading="false" OnRun="() => { }" />
+                }
+            </div>
+        </section>
+    }
+
+    @* Sales Engagement Module Notice *@
+    <div class="notice-box">
+        <p class="text-sm text-gray-700">
+            <strong>Note:</strong> Additional actions are available with the Sales Engagement module.
+        </p>
+    </div>
+</div>
+
+@code {
+    private string? loadingId;
+
+    private List<ActionItem> actions = new()
+    {
+        new ActionItem("1", "Send Follow-up Email", "Use a template to send a follow-up email", typeof(Icons.SendIcon), ActionStatus.Available),
+        new ActionItem("2", "Schedule Meeting", "Book a meeting with the contact", typeof(Icons.ClockIcon), ActionStatus.Available),
+        new ActionItem("3", "Create Task", "Add a task to your CRM", typeof(Icons.DocumentIcon), ActionStatus.Available),
+        new ActionItem("4", "Sync to CRM", "Sync this conversation to your CRM", typeof(Icons.SyncIcon), ActionStatus.Completed)
+    };
+
+    private List<ActionItem> AvailableActions => actions.Where(a => a.Status == ActionStatus.Available).ToList();
+    private List<ActionItem> CompletedActions => actions.Where(a => a.Status == ActionStatus.Completed).ToList();
+
+    private async Task HandleAction(string actionId)
+    {
+        loadingId = actionId;
+        StateHasChanged();
+
+        await Task.Delay(1500); // Simulate action
+
+        var action = actions.First(a => a.Id == actionId);
+        var index = actions.IndexOf(action);
+        actions[index] = action with { Status = ActionStatus.Completed };
+
+        loadingId = null;
+        StateHasChanged();
+    }
+
+    public enum ActionStatus
+    {
+        Available,
+        Scheduled,
+        Completed
+    }
+
+    public record ActionItem(string Id, string Title, string Description, Type IconType, ActionStatus Status);
+}

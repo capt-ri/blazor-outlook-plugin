@@ -1,0 +1,72 @@
+@namespace OutlookPlugin.Components.Layout
+@using OutlookPlugin.Services
+@inject AppState AppState
+
+<header class="header">
+    <div class="header-content">
+        @if (AppState.SearchVisible)
+        {
+            <div class="flex items-center flex-1 gap-2">
+                <input type="text"
+                       class="input flex-1"
+                       placeholder="Search contacts, accounts..."
+                       value="@AppState.SearchQuery"
+                       @oninput="HandleSearchInput"
+                       autofocus />
+                <button class="btn btn-subtle text-white" @onclick="AppState.ToggleSearch">
+                    <DismissIcon />
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="flex items-center gap-2">
+                <button class="btn btn-subtle text-white" @onclick="GoHome" title="Home">
+                    <HomeIcon Class="w-5 h-5" />
+                </button>
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="btn btn-subtle text-white" @onclick="AppState.ToggleSearch" title="Search">
+                    <SearchIcon />
+                </button>
+                <button class="btn btn-subtle text-white" @onclick="GoToEmail" title="Email Details">
+                    <MailIcon />
+                </button>
+                <button class="btn btn-subtle text-white" title="My Day">
+                    <CalendarIcon />
+                </button>
+                <button class="btn btn-subtle text-white" title="Settings">
+                    <SettingsIcon />
+                </button>
+            </div>
+        }
+    </div>
+</header>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    private void GoHome()
+    {
+        AppState.NavigateToPage(AppPage.Home);
+        AppState.SetActiveTab(ActiveTab.Related);
+    }
+    
+    private void GoToEmail()
+    {
+        AppState.NavigateToPage(AppPage.Email);
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        AppState.SetSearchQuery(e.Value?.ToString() ?? "");
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

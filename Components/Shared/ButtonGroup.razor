@@ -1,0 +1,58 @@
+@namespace OutlookPlugin.Components.Shared
+
+<div class="flex gap-2 @(Direction == ButtonDirection.Vertical ? "flex-col" : "") @Class">
+    @foreach (var button in Buttons)
+    {
+        <button class="btn @GetButtonClass(button.Variant) @(FullWidth ? "flex-1" : "")"
+                disabled="@(button.Disabled || button.Loading)"
+                @onclick="button.OnClick">
+            @if (button.Loading)
+            {
+                <span class="spinner"></span>
+            }
+            else if (button.Icon != null)
+            {
+                @button.Icon
+            }
+            @button.Label
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public List<ActionButton> Buttons { get; set; } = new();
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public ButtonDirection Direction { get; set; } = ButtonDirection.Horizontal;
+    [Parameter] public bool FullWidth { get; set; }
+
+    public enum ButtonDirection
+    {
+        Horizontal,
+        Vertical
+    }
+
+    public enum ButtonVariant
+    {
+        Primary,
+        Secondary,
+        Outline
+    }
+
+    public record ActionButton(
+        string Id,
+        string Label,
+        ButtonVariant Variant,
+        Action OnClick,
+        bool Disabled = false,
+        bool Loading = false,
+        RenderFragment? Icon = null
+    );
+
+    private string GetButtonClass(ButtonVariant variant) => variant switch
+    {
+        ButtonVariant.Primary => "btn-primary",
+        ButtonVariant.Secondary => "btn-secondary",
+        ButtonVariant.Outline => "btn-outline",
+        _ => "btn-secondary"
+    };
+}

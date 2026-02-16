@@ -1,0 +1,79 @@
+@namespace OutlookPlugin.Components.Shared
+@using OutlookPlugin.Services
+
+<div class="search-wrapper relative">
+    <div class="flex items-center gap-1">
+        <div class="relative flex-1">
+            <span class="search-icon">
+                <SearchIcon />
+            </span>
+            <input type="text"
+                   class="input search-input"
+                   placeholder="@Placeholder"
+                   value="@Value"
+                   @oninput="HandleInput" />
+            @if (!string.IsNullOrEmpty(Value))
+            {
+                <button class="search-clear" @onclick="HandleClear">
+                    <DismissIcon Class="icon-sm" />
+                </button>
+            }
+        </div>
+
+        @if (ShowFilter)
+        {
+            <button class="btn btn-subtle @(showFilters ? "text-primary" : "text-secondary")"
+                    @onclick="ToggleFilters">
+                <FilterIcon />
+            </button>
+        }
+    </div>
+
+    @if (showFilters && ShowFilter)
+    {
+        <div class="filter-dropdown animate-fade-in">
+            <div class="p-1">
+                @foreach (var filter in Enum.GetValues<FilterType>())
+                {
+                    <button class="filter-option @(ActiveFilter == filter ? "active" : "")"
+                            @onclick="() => HandleFilterChange(filter)">
+                        @filter.ToString()
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+    [Parameter] public bool ShowFilter { get; set; }
+    [Parameter] public FilterType ActiveFilter { get; set; } = FilterType.All;
+    [Parameter] public EventCallback<FilterType> ActiveFilterChanged { get; set; }
+
+    private bool showFilters;
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    private async Task HandleClear()
+    {
+        await ValueChanged.InvokeAsync("");
+    }
+
+    private void ToggleFilters()
+    {
+        showFilters = !showFilters;
+    }
+
+    private async Task HandleFilterChange(FilterType filter)
+    {
+        await ActiveFilterChanged.InvokeAsync(filter);
+        showFilters = false;
+    }
+}

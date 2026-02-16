@@ -1,0 +1,55 @@
+@namespace OutlookPlugin.Components.Tabs
+
+<div class="action-card @(Action.Status == ActionsTab.ActionStatus.Completed ? "completed" : "")">
+    <div class="action-icon @(Action.Status == ActionsTab.ActionStatus.Completed ? "action-icon-success" : "action-icon-primary")">
+        @if (Action.Status == ActionsTab.ActionStatus.Completed)
+        {
+            <CheckmarkIcon />
+        }
+        else if (Action.IconType == typeof(Icons.SendIcon))
+        {
+            <SendIcon />
+        }
+        else if (Action.IconType == typeof(Icons.ClockIcon))
+        {
+            <ClockIcon />
+        }
+        else if (Action.IconType == typeof(Icons.DocumentIcon))
+        {
+            <DocumentIcon />
+        }
+        else if (Action.IconType == typeof(Icons.SyncIcon))
+        {
+            <SyncIcon />
+        }
+    </div>
+
+    <div class="flex-1 min-w-0">
+        <h4 class="text-sm font-medium text-gray-900">@Action.Title</h4>
+        <p class="text-xs text-secondary">@Action.Description</p>
+    </div>
+
+    @if (Action.Status != ActionsTab.ActionStatus.Completed)
+    {
+        <button class="btn btn-primary btn-sm" @onclick="OnRun" disabled="@IsLoading">
+            @if (IsLoading)
+            {
+                <span class="spinner"></span>
+            }
+            else
+            {
+                <span>Run</span>
+            }
+        </button>
+    }
+    else
+    {
+        <span class="text-xs text-success font-medium">Done</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ActionsTab.ActionItem Action { get; set; } = default!;
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnRun { get; set; }
+}

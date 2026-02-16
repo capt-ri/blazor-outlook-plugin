@@ -1,0 +1,55 @@
+@namespace OutlookPlugin.Components.Layout
+@using OutlookPlugin.Services
+@inject AppState AppState
+@inject IJSRuntime JS
+
+<nav class="tab-nav" role="tablist">
+    <div class="tab-nav-inner">
+        <button class="tab-btn @(AppState.ActiveTab == ActiveTab.Related ? "active" : "")"
+                role="tab"
+                aria-selected="@(AppState.ActiveTab == ActiveTab.Related)"
+                @onclick="() => HandleTabChange(ActiveTab.Related)">
+            Related
+        </button>
+        <button class="tab-btn @(AppState.ActiveTab == ActiveTab.Track ? "active" : "")"
+                role="tab"
+                aria-selected="@(AppState.ActiveTab == ActiveTab.Track)"
+                @onclick="() => HandleTabChange(ActiveTab.Track)">
+            Track
+            @if (AppState.Draft.IsDirty)
+            {
+                <span class="ml-1 w-2 h-2 bg-warning rounded-full inline-block"></span>
+            }
+        </button>
+        <button class="tab-btn @(AppState.ActiveTab == ActiveTab.Actions ? "active" : "")"
+                role="tab"
+                aria-selected="@(AppState.ActiveTab == ActiveTab.Actions)"
+                @onclick="() => HandleTabChange(ActiveTab.Actions)">
+            Actions
+        </button>
+    </div>
+</nav>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    private async Task HandleTabChange(ActiveTab tab)
+    {
+        // Check for unsaved changes when leaving track tab
+        if (AppState.ActiveTab == ActiveTab.Track && AppState.Draft.IsDirty && tab != ActiveTab.Track)
+        {
+            var confirmed = await JS.InvokeAsync<bool>("confirm", "You have unsaved changes. Do you want to discard them?");
+            if (!confirmed) return;
+        }
+
+        AppState.SetActiveTab(tab);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}
