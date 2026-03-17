@@ -138,3 +138,101 @@ AppState.TrackContact(contactId);
 ## License
 
 MIT
+
+
+
+---
+
+# Orcas Initiative – Recurring Meeting & Sync Requirements  
+**(Stand-up Call Notes – 12 Mar 2026)**
+
+**Created by:** Seneca (drafted based on call)  
+**Last Updated:** 12 March 2026  
+**Labels:** orcas, outlook-plugin, salesforce-sync, recurring-meetings, ib, gm
+
+---
+
+## Meeting Purpose
+Captured requirements from today’s stand-up call regarding the **Outlook plugin → Sync Engine → Salesforce** integration.  
+Focus is on **full lifecycle support for recurring/series meetings** plus critical decisions on multi-business-line architecture (IB + GM).
+
+---
+
+## 1. Recurring / Series Meeting Lifecycle (Highest Priority)
+The plugin must fully support recurring meetings end-to-end. All actions below must be captured from Outlook events and forwarded to the Sync Engine.
+
+### Creation / Forwarding
+- When a user creates or updates a **series** of recurring meetings in Outlook, the plugin must forward the **entire series** (including the master meeting ID) to the Sync Engine.
+- Seneca’s name (or any attendee) must be sent to Salesforce.
+
+### Attendee Add / Remove
+- Detect whether the change applies to:
+  - A **single instance** only, **OR**
+  - The **entire series**
+- Sync the correct update to Salesforce via the Sync Engine.
+
+### Any Change Tracking
+- Time, title, location, description, attendees, recurrence pattern — **any modification** must be captured and synced.
+
+---
+
+## 2. Delete / Purge Handling
+- User deletes a **single meeting** or an **entire recurring series** in Outlook.
+- Plugin must immediately capture the meeting ID(s) and notify the Sync Engine.
+- Sync Engine must **purge** those meetings from Salesforce going forward.
+- (Outlook handles its own deletion; we only trigger Salesforce purge.)
+
+---
+
+## 3. UI & Business Line Separation (IB vs GM)
+**Decision:** Do **NOT** do dynamic layout switching inside one plugin (too complex).
+
+Build and deploy **two completely separate Outlook add-ins** (same codebase OK).
+
+| Business Line | Page Name                        | Fields Included                              | Manifest Name      | Client ID/Secret | Settings File   |
+|---------------|----------------------------------|----------------------------------------------|--------------------|------------------|-----------------|
+| **IB**        | Meeting Planner (existing)       | Products, Projects, Meeting Purpose, Meeting Type | `Orcas-IB.xml`    | IB-specific      | IB settings     |
+| **GM**        | Event / Activity Planner (restore immediately) | NO Products, NO Projects (simplified)       | `Orcas-GM.xml`    | GM-specific      | GM settings     |
+
+- Both instances can run on the **same IIS server** as separate websites.
+- Users download the correct one:
+  - IB users → **Orcas IB**
+  - GM users → **Orcas GM**
+- Future business lines → additional manifests (no shared reactive template).
+
+**Code Rule (Roman):**  
+Do **NOT** delete any existing work (GM page, IB page, or any code).  
+Keep IB and GM in **completely separate folders/projects** for zero risk.
+
+---
+
+## 4. Authentication & Deployment
+- Use IAC provisioning per instance.
+- Each instance gets its own **Client ID + Client Secret**.
+- Store in a simple `appsettings.config` (one set per instance only).
+- No runtime user detection needed in the plugin.
+
+---
+
+## Action Items
+
+| Owner   | Task                                                                 | Status    |
+|---------|----------------------------------------------------------------------|-----------|
+| Seneca  | Create this page and add all points above                            | Done      |
+| Roman   | Restore the GM “Event/Activity Planner” page immediately             | Pending   |
+| Roman   | Prepare two separate manifests (`Orcas-IB.xml` + `Orcas-GM.xml`)     | Pending   |
+| Roman   | Create separate settings files and folders for IB/GM                 | Pending   |
+| Roman   | Do NOT delete any code or pages                                      | Ongoing   |
+| All     | Reach out immediately if anything is unclear                         | —         |
+
+---
+
+**File ready to save:**  
+`Orcas_Recurring_Meeting_Requirements.md`
+
+Just copy everything above (including the frontmatter if you use Obsidian/Notion/etc.) and paste into a new `.md` file.  
+Let me know if you want a version with checkboxes, Jira links, or a separate README-style file!
+
+
+
+
