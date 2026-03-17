@@ -15,6 +15,22 @@ public class OutlookService
     }
 
     /// <summary>
+    /// Returns true if the app is running inside Outlook as an add-in (task pane). False if opened in a normal browser tab.
+    /// </summary>
+    public async Task<bool> IsRunningInOutlookAsync()
+    {
+        try
+        {
+            return await _jsRuntime.InvokeAsync<bool>("outlookInterop.isRunningInOutlook");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error detecting Outlook host: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gets the current email item's subject
     /// </summary>
     public async Task<string?> GetEmailSubjectAsync()
@@ -243,6 +259,55 @@ public class OutlookService
             Console.WriteLine($"Error unregistering item changed handler: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Gets the location of the current item (appointments only).
+    /// </summary>
+    public async Task<string?> GetLocationAsync()
+    {
+        try
+        {
+            return await _jsRuntime.InvokeAsync<string>("outlookInterop.getLocation");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting location: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets attendees (organizer, required, optional) for the current appointment/meeting.
+    /// </summary>
+    public async Task<List<MeetingAttendee>> GetAttendeesAsync()
+    {
+        try
+        {
+            var attendees = await _jsRuntime.InvokeAsync<MeetingAttendee[]>("outlookInterop.getAttendees");
+            return attendees?.ToList() ?? new List<MeetingAttendee>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting attendees: {ex.Message}");
+            return new List<MeetingAttendee>();
+        }
+    }
+
+    /// <summary>
+    /// Gets meeting series recurrence info for the current appointment/meeting (if it is a recurring series). Returns null for single appointments or emails. Requires Mailbox 1.7.
+    /// </summary>
+    public async Task<MeetingSeriesInfo?> GetMeetingSeriesInfoAsync()
+    {
+        try
+        {
+            return await _jsRuntime.InvokeAsync<MeetingSeriesInfo?>("outlookInterop.getMeetingSeriesInfo");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting meeting series info: {ex.Message}");
+            return null;
+        }
+    }
 }
 
 // DTOs for email data
@@ -267,3 +332,31 @@ public enum NotificationType
     Progress,
     Error
 }
+
+// DTOs for meeting series (recurrence)
+public record MeetingSeriesInfo(
+    string? Subject,
+    string? Location,
+    string? RecurrenceType,
+    string? StartDate,
+    string? EndDate,
+    string? StartTime,
+    string? EndTime,
+    int? DurationMinutes,
+    RecurrencePropertiesDto? RecurrenceProperties,
+    RecurrenceTimeZoneDto? RecurrenceTimeZone
+);
+
+public record RecurrencePropertiesDto(
+    int? Interval,
+    string[]? Days,
+    string? DayOfWeek,
+    int? DayOfMonth,
+    string? Month,
+    string? WeekNumber,
+    string? FirstDayOfWeek
+);
+
+public record RecurrenceTimeZoneDto(string? Name, int? Offset);
+
+public record MeetingAttendee(string? DisplayName, string? EmailAddress, string? Type);

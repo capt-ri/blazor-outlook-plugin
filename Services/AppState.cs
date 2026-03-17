@@ -25,7 +25,8 @@ public enum AppPage
 {
     Auth,
     Home,
-    Email
+    Email,
+    MeetingSeries
 }
 
 public enum FilterType

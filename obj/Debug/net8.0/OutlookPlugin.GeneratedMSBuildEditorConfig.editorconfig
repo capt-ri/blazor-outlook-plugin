@@ -1,0 +1,211 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net8.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = OutlookPlugin
+build_property.RootNamespace = OutlookPlugin
+build_property.ProjectDir = C:\Development\poc\blazor-outlook-plugin\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Development\poc\blazor-outlook-plugin
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Development/poc/blazor-outlook-plugin/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/BuildingIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xCdWlsZGluZ0ljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/CalendarIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDYWxlbmRhckljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/CheckmarkIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDaGVja21hcmtJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/ChevronDownIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDaGV2cm9uRG93bkljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/ChevronLeftIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDaGV2cm9uTGVmdEljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/ChevronUpIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDaGV2cm9uVXBJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/ClockIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDbG9ja0ljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/CloudIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xDbG91ZEljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/DeleteIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xEZWxldGVJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/DismissIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xEaXNtaXNzSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/DocumentIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xEb2N1bWVudEljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/FilterIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xGaWx0ZXJJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/HomeIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xIb21lSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/KeyIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xLZXlJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/MailIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xNYWlsSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/MoreIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xNb3JlSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/PersonAddIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xQZXJzb25BZGRJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/PersonIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xQZXJzb25JY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SaveIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTYXZlSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SearchIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTZWFyY2hJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SendIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTZW5kSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SettingsIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTZXR0aW5nc0ljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SparkleIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTcGFya2xlSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Icons/SyncIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJY29uc1xTeW5jSWNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Layout/CopilotPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcQ29waWxvdFBhbmVsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Layout/Header.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcSGVhZGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Layout/Shell.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcU2hlbGwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Layout/TabNavigation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcVGFiTmF2aWdhdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/Autocomplete.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcQXV0b2NvbXBsZXRlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/ButtonGroup.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcQnV0dG9uR3JvdXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/DiscoveryCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcRGlzY292ZXJ5Q2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/EntityCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcRW50aXR5Q2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/SearchField.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcU2VhcmNoRmllbGQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Shared/StatusBadge.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcU3RhdHVzQmFkZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Tabs/ActionCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYWJzXEFjdGlvbkNhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Tabs/ActionsTab.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYWJzXEFjdGlvbnNUYWIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Tabs/RelatedTab.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYWJzXFJlbGF0ZWRUYWIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Tabs/SectionHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYWJzXFNlY3Rpb25IZWFkZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/Tabs/TrackTab.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYWJzXFRyYWNrVGFiLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Components/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xfSW1wb3J0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Pages/Auth.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Pages/Email.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRW1haWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/Pages/MeetingSeries.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVldGluZ1Nlcmllcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Development/poc/blazor-outlook-plugin/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 

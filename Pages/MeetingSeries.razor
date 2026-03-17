@@ -1,0 +1,263 @@
+@using OutlookPlugin.Services
+@using OutlookPlugin.Components.Layout
+@using OutlookPlugin.Components.Icons
+@inject AppState AppState
+@inject OutlookService OutlookService
+@implements IDisposable
+
+<Shell ShowTabs="false" ShowCopilot="false">
+    <div class="p-4 space-y-4">
+        <div class="flex items-center gap-3 mb-4">
+            <button class="btn btn-subtle" @onclick="GoBack" title="Back to Home">
+                <ChevronLeftIcon Class="w-5 h-5" />
+            </button>
+            <h1 class="text-lg font-semibold">Meeting Series</h1>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-8">
+                <span class="spinner spinner-lg text-primary mb-4"></span>
+                <p class="text-sm text-secondary">Loading meeting series...</p>
+            </div>
+        }
+        else if (!isInOutlook)
+        {
+            <div class="empty-state py-8">
+                <CalendarIcon Class="w-12 h-12 text-secondary mx-auto mb-4" />
+                <p class="text-secondary">Not running in Outlook</p>
+                <p class="text-xs text-secondary mt-2">Open this add-in from a meeting or appointment in Outlook to capture series details.</p>
+            </div>
+        }
+        else if (seriesInfo == null)
+        {
+            <div class="empty-state py-8">
+                <CalendarIcon Class="w-12 h-12 text-secondary mx-auto mb-4" />
+                <p class="text-secondary font-medium">No recurring series</p>
+                @if (!string.IsNullOrEmpty(currentItemSubject))
+                {
+                    <p class="text-xs text-secondary mt-2 max-w-sm mx-auto">
+                        Current item: <strong>@currentItemSubject</strong>
+                        @if (!string.IsNullOrEmpty(currentItemType))
+                        {
+                            <span> (type: @currentItemType)</span>
+                        }
+                    </p>
+                }
+                <p class="text-xs text-secondary mt-2 text-left max-w-sm mx-auto">
+                    To see series details, open a <strong>recurring</strong> meeting or appointment in Outlook, then open this add-in from that item. Single (one-time) meetings won’t show here.
+                </p>
+                <p class="text-xs text-secondary mt-2 text-left max-w-sm mx-auto">
+                    Tip: If you see &quot;Event instance&quot; in the title bar, click <strong>View series</strong> in the event, then open CRM Insight again so the add-in can read the full series.
+                </p>
+                <button class="btn btn-primary mt-4" @onclick="LoadMeetingSeriesAsync">
+                    Refresh
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-4 animate-fade-in">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-xs text-secondary font-medium mb-1">MEETING</div>
+                        <div class="font-semibold text-base">@(seriesInfo.Subject ?? "No subject")</div>
+                        @if (!string.IsNullOrEmpty(seriesInfo.Location))
+                        {
+                            <div class="text-sm text-secondary mt-1">@seriesInfo.Location</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-xs text-secondary font-medium mb-2">RECURRENCE</div>
+                        <div class="font-medium">@FormatRecurrenceType(seriesInfo.RecurrenceType)</div>
+                        @if (seriesInfo.RecurrenceProperties != null)
+                        {
+                            <div class="text-sm text-secondary mt-2 space-y-1">
+                                @if (seriesInfo.RecurrenceProperties.Interval.HasValue && seriesInfo.RecurrenceProperties.Interval > 1)
+                                {
+                                    <div>Every @seriesInfo.RecurrenceProperties.Interval @FormatRecurrenceType(seriesInfo.RecurrenceType)@(seriesInfo.RecurrenceProperties.Interval == 1 ? "" : "s")</div>
+                                }
+                                @if (seriesInfo.RecurrenceProperties.Days?.Any() == true)
+                                {
+                                    <div>On: @string.Join(", ", seriesInfo.RecurrenceProperties.Days)</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-xs text-secondary font-medium mb-2">SERIES DATES & TIME</div>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="text-secondary">Start:</span> @FormatDate(seriesInfo.StartDate) @FormatTime(seriesInfo.StartTime)</div>
+                            <div><span class="text-secondary">End:</span> @FormatDate(seriesInfo.EndDate) @FormatTime(seriesInfo.EndTime)</div>
+                            @if (seriesInfo.DurationMinutes.HasValue)
+                            {
+                                <div><span class="text-secondary">Duration:</span> @seriesInfo.DurationMinutes minutes</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @if (attendees.Any())
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-xs text-secondary font-medium mb-2">ATTENDEES (@attendees.Count)</div>
+                            <div class="space-y-2">
+                                @foreach (var attendee in attendees)
+                                {
+                                    <div class="flex items-center gap-3 py-1">
+                                        <div class="avatar avatar-sm avatar-contact">
+                                            @GetInitials(attendee.DisplayName ?? attendee.EmailAddress)
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-sm font-medium truncate">@(attendee.DisplayName ?? attendee.EmailAddress)</div>
+                                            @if (!string.IsNullOrEmpty(attendee.EmailAddress) && attendee.EmailAddress != attendee.DisplayName)
+                                            {
+                                                <div class="text-xs text-secondary truncate">@attendee.EmailAddress</div>
+                                            }
+                                        </div>
+                                        <span class="text-xs px-2 py-0.5 rounded-full @GetAttendeeTypeBadge(attendee.Type)">@(attendee.Type ?? "Attendee")</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (seriesInfo.RecurrenceTimeZone != null && !string.IsNullOrEmpty(seriesInfo.RecurrenceTimeZone.Name))
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-xs text-secondary font-medium mb-1">TIME ZONE</div>
+                            <div class="text-sm">@seriesInfo.RecurrenceTimeZone.Name</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</Shell>
+
+@code {
+    private bool isLoading = true;
+    private bool isInOutlook;
+    private MeetingSeriesInfo? seriesInfo;
+    private List<MeetingAttendee> attendees = new();
+    private string? currentItemSubject;
+    private string? currentItemType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadMeetingSeriesAsync();
+        }
+    }
+
+    private async Task LoadMeetingSeriesAsync()
+    {
+        isLoading = true;
+        currentItemSubject = null;
+        currentItemType = null;
+        StateHasChanged();
+
+        try
+        {
+            isInOutlook = await OutlookService.IsRunningInOutlookAsync();
+            if (!isInOutlook)
+            {
+                seriesInfo = null;
+                return;
+            }
+            currentItemSubject = await OutlookService.GetEmailSubjectAsync();
+            currentItemType = await OutlookService.GetItemTypeAsync();
+            attendees = await OutlookService.GetAttendeesAsync();
+            seriesInfo = await OutlookService.GetMeetingSeriesInfoAsync();
+            if (seriesInfo == null)
+            {
+                await Task.Delay(600);
+                seriesInfo = await OutlookService.GetMeetingSeriesInfoAsync();
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatRecurrenceType(string? type)
+    {
+        if (string.IsNullOrEmpty(type)) return "—";
+        return type switch
+        {
+            "daily" => "Daily",
+            "weekly" => "Weekly",
+            "monthly" => "Monthly",
+            "yearly" => "Yearly",
+            _ => type
+        };
+    }
+
+    private static string FormatDate(string? isoDate)
+    {
+        if (string.IsNullOrEmpty(isoDate)) return "—";
+        if (DateTime.TryParse(isoDate, out var d))
+            return d.ToString("MMM d, yyyy");
+        return isoDate;
+    }
+
+    private static string FormatTime(string? isoTime)
+    {
+        if (string.IsNullOrEmpty(isoTime)) return "";
+        var timePart = isoTime.StartsWith("T", StringComparison.OrdinalIgnoreCase) ? isoTime.Substring(1) : isoTime;
+        timePart = timePart.Split('.')[0];
+        if (TimeSpan.TryParse(timePart, out var t))
+        {
+            var hours = (int)t.TotalHours;
+            var mins = t.Minutes;
+            if (hours >= 12)
+                return $"{(hours == 12 ? 12 : hours - 12)}:{mins:D2} PM";
+            return $"{(hours == 0 ? 12 : hours)}:{mins:D2} AM";
+        }
+        return isoTime;
+    }
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Split(' ', '@', '.').Where(p => !string.IsNullOrEmpty(p)).ToArray();
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+
+    private static string GetAttendeeTypeBadge(string? type) => type switch
+    {
+        "Organizer" => "bg-primary-light text-primary",
+        "Required" => "bg-gray-100 text-gray-700",
+        "Optional" => "bg-gray-50 text-gray-500",
+        _ => "bg-gray-100 text-gray-600"
+    };
+
+    private void GoBack()
+    {
+        AppState.NavigateToPage(AppPage.Home);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

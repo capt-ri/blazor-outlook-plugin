@@ -83,6 +83,17 @@
 
         // Outlook JavaScript Interop functions for Blazor
         window.outlookInterop = {
+            // Returns true if the app is running inside Outlook as an add-in (task pane). False if opened in a normal browser tab.
+            isRunningInOutlook: function() {
+                try {
+                    return typeof Office !== 'undefined' &&
+                        Office.context &&
+                        Office.context.mailbox != null;
+                } catch (e) {
+                    return false;
+                }
+            },
+
             // Get email subject
             getSubject: function() {
                 return new Promise(function(resolve, reject) {
@@ -279,6 +290,132 @@
                         }
                     } catch (e) {
                         reject(e);
+                    }
+                });
+            },
+
+            // Get location (appointments only)
+            getLocation: function() {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        if (Office.context.mailbox && Office.context.mailbox.item && Office.context.mailbox.item.location) {
+                            resolve(Office.context.mailbox.item.location);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // Get attendees for the current appointment/meeting
+            getAttendees: function() {
+                return new Promise(function(resolve) {
+                    try {
+                        var item = Office.context.mailbox && Office.context.mailbox.item ? Office.context.mailbox.item : null;
+                        if (!item) {
+                            resolve([]);
+                            return;
+                        }
+                        var attendees = [];
+                        if (item.requiredAttendees) {
+                            item.requiredAttendees.forEach(function(a) {
+                                attendees.push({ displayName: a.displayName, emailAddress: a.emailAddress, type: 'Required' });
+                            });
+                        }
+                        if (item.optionalAttendees) {
+                            item.optionalAttendees.forEach(function(a) {
+                                attendees.push({ displayName: a.displayName, emailAddress: a.emailAddress, type: 'Optional' });
+                            });
+                        }
+                        if (item.organizer) {
+                            attendees.unshift({ displayName: item.organizer.displayName, emailAddress: item.organizer.emailAddress, type: 'Organizer' });
+                        }
+                        resolve(attendees);
+                    } catch (e) {
+                        console.warn('[MeetingSeries] getAttendees error:', e);
+                        resolve([]);
+                    }
+                });
+            },
+
+            // Get meeting series recurrence info. Requires Mailbox 1.7.
+            // In READ mode: item.recurrence IS the Recurrence object directly (has recurrenceType, seriesTime, etc.)
+            // In COMPOSE mode: item.recurrence has getAsync()/setAsync() methods.
+            getMeetingSeriesInfo: function() {
+                var self = this;
+                function buildResult(item, rec) {
+                    if (!rec || !rec.recurrenceType) return null;
+                    var seriesTime = rec.seriesTime;
+                    return {
+                        subject: item.subject || null,
+                        location: item.location || null,
+                        recurrenceType: rec.recurrenceType || null,
+                        startDate: seriesTime && typeof seriesTime.getStartDate === 'function' ? seriesTime.getStartDate() : null,
+                        endDate: seriesTime && typeof seriesTime.getEndDate === 'function' ? seriesTime.getEndDate() : null,
+                        startTime: seriesTime && typeof seriesTime.getStartTime === 'function' ? seriesTime.getStartTime() : null,
+                        endTime: seriesTime && typeof seriesTime.getEndTime === 'function' ? seriesTime.getEndTime() : null,
+                        durationMinutes: seriesTime && typeof seriesTime.getDuration === 'function' ? seriesTime.getDuration() : null,
+                        recurrenceProperties: rec.recurrenceProperties ? {
+                            interval: rec.recurrenceProperties.interval,
+                            days: rec.recurrenceProperties.days,
+                            dayOfWeek: rec.recurrenceProperties.dayOfWeek,
+                            dayOfMonth: rec.recurrenceProperties.dayOfMonth,
+                            month: rec.recurrenceProperties.month,
+                            weekNumber: rec.recurrenceProperties.weekNumber,
+                            firstDayOfWeek: rec.recurrenceProperties.firstDayOfWeek
+                        } : null,
+                        recurrenceTimeZone: rec.recurrenceTimeZone ? { name: rec.recurrenceTimeZone.name, offset: rec.recurrenceTimeZone.offset } : null
+                    };
+                }
+
+                return new Promise(function(resolve) {
+                    try {
+                        var item = Office.context.mailbox && Office.context.mailbox.item ? Office.context.mailbox.item : null;
+                        if (!item) {
+                            resolve(null);
+                            return;
+                        }
+                        var recurrence = item.recurrence;
+                        if (!recurrence) {
+                            console.log('[MeetingSeries] No recurrence property on item. Item type:', item.itemType);
+                            resolve(null);
+                            return;
+                        }
+
+                        // READ mode: item.recurrence IS the Recurrence object with recurrenceType directly
+                        if (recurrence.recurrenceType) {
+                            console.log('[MeetingSeries] Read mode - recurrence data available directly. Type:', recurrence.recurrenceType);
+                            resolve(buildResult(item, recurrence));
+                            return;
+                        }
+
+                        // COMPOSE mode: item.recurrence has getAsync()
+                        if (typeof recurrence.getAsync === 'function') {
+                            console.log('[MeetingSeries] Compose mode - calling getAsync...');
+                            recurrence.getAsync(function(asyncResult) {
+                                try {
+                                    if (asyncResult.status !== Office.AsyncResultStatus.Succeeded) {
+                                        console.warn('[MeetingSeries] getAsync failed:', asyncResult.error ? asyncResult.error.message : asyncResult.status);
+                                        resolve(null);
+                                        return;
+                                    }
+                                    resolve(buildResult(item, asyncResult.value));
+                                } catch (innerErr) {
+                                    console.warn('[MeetingSeries] getAsync callback error:', innerErr);
+                                    resolve(null);
+                                }
+                            });
+                            return;
+                        }
+
+                        // recurrence exists but has neither recurrenceType nor getAsync
+                        console.log('[MeetingSeries] recurrence object present but no data and no getAsync. Keys:', Object.keys(recurrence));
+                        resolve(null);
+                    } catch (e) {
+                        console.warn('[MeetingSeries] getMeetingSeriesInfo error:', e);
+                        resolve(null);
                     }
                 });
             },

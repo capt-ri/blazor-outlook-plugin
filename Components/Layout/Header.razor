@@ -32,7 +32,7 @@
                 <button class="btn btn-subtle text-white" @onclick="GoToEmail" title="Email Details">
                     <MailIcon />
                 </button>
-                <button class="btn btn-subtle text-white" title="My Day">
+                <button class="btn btn-subtle text-white" @onclick="GoToMeetingSeries" title="Meeting Series">
                     <CalendarIcon />
                 </button>
                 <button class="btn btn-subtle text-white" title="Settings">
@@ -58,6 +58,11 @@
     private void GoToEmail()
     {
         AppState.NavigateToPage(AppPage.Email);
+    }
+
+    private void GoToMeetingSeries()
+    {
+        AppState.NavigateToPage(AppPage.MeetingSeries);
     }
 
     private void HandleSearchInput(ChangeEventArgs e)
