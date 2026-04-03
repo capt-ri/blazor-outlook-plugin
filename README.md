@@ -234,5 +234,41 @@ Just copy everything above (including the frontmatter if you use Obsidian/Notion
 Let me know if you want a version with checkboxes, Jira links, or a separate README-style file!
 
 
+----
 
+Purpose of the Meeting
+The team discussed a new Outlook plugin (built as a lightweight web app) to sync calendar events (meetings) and emails from Outlook to Salesforce, replacing an older, intrusive Nomura plugin that users disliked.
+Key Problems with the Old Plugin
+•  Every time a user created a meeting in Outlook, a pop-up appeared asking if it should sync to Salesforce.
+•  This was annoying because most meetings are internal and users didn’t want them in Salesforce.
+•  Users found it disruptive, leading the team to abandon the old plugin.
+New Plugin Approach (Cherry-Picking Model)
+•  No automatic pop-up on every meeting creation.
+•  A side panel appears on the right in Outlook when you open/create a calendar event.
+•  The panel auto-populates with meeting details (subject, attendees, time, etc.).
+•  It checks Salesforce in real-time as you type attendees:
+	•  If the contact exists → shows the matching contact/account.
+	•  If not → shows a + button to quickly create the new contact in Salesforce.
+•  Users cherry-pick what to sync:
+	•  Option to click “Save to Salesforce” (or a configurable checkbox).
+	•  Or tie syncing to Outlook’s Send button (with possible confirmation prompt).
+•  Alternative backend option (still in discussion): A sync engine that polls for events marked with a “sync” flag, so users don’t need to click anything extra.
+Customization & Flexibility
+•  Highly configurable by group (IB, GM, Instant, etc.):
+	•  Show/hide fields.
+	•  Default activity types/subtypes (e.g., default to “Sales Meeting” for Instant users).
+	•  Required field validation (pulls from Salesforce).
+	•  Different behavior per user type (e.g., simpler experience for Instant/traders).
+•  Panel is responsive (can be resized) and runs as a web view (not a heavy desktop add-in).
+Performance & User Experience Concerns
+•  The new plugin is designed to be lightweight (modeled after Riva, which has had few complaints).
+•  Old plugin caused slowdowns/crashes; this one shouldn’t, but they will thoroughly test in a QA M365 environment.
+•  Panel always appears when editing a meeting (takes about 1/3 of the screen).
+•  Focus on making it simple and fast for salespeople/traders who work quickly and don’t want extra clicks or clutter.
+Current Status & Next Steps
+•  Currently only a web demo (test mode shown).
+•  Cannot yet deploy/test in actual Outlook because they need MTA/NTI approval from Infosec (no SAS or EI components, so it should be straightforward).
+•  Once approved → deploy to QA, test with users (including potential Instant users), check performance, crashes, loading time, different Outlook versions, etc.
+•  Feedback from the meeting (especially from LK on Instant user behavior) will be used to refine UI, button placement, defaults, and options (e.g., checkbox vs. button, panel visibility).
+Overall tone: Positive and collaborative. The team appreciated the detailed user-perspective feedback on making it “dummy-proof,” fast, and non-intrusive for busy salespeople while giving control over what gets synced to Salesforce. Development is on hold until security approval, with no expected rollout before summer at the earliest.
 
