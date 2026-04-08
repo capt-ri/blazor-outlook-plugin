@@ -272,3 +272,63 @@ Current Status & Next Steps
 •  Feedback from the meeting (especially from LK on Instant user behavior) will be used to refine UI, button placement, defaults, and options (e.g., checkbox vs. button, panel visibility).
 Overall tone: Positive and collaborative. The team appreciated the detailed user-perspective feedback on making it “dummy-proof,” fast, and non-intrusive for busy salespeople while giving control over what gets synced to Salesforce. Development is on hold until security approval, with no expected rollout before summer at the earliest.
 
+
+
+
+
+-----
+
+Prompt for Implementing Email Sync from Outlook to Salesforce (EmailMessage Object):
+You are an experienced Salesforce + Outlook/VBA/Office Add-in developer.
+Business Requirements:
+We need to implement manual email sync from Outlook to Salesforce using the standard EmailMessage object (not Events or Tasks).
+Key points from the discussion:
+•  Emails should sync as EmailMessage records in Salesforce (Out-of-the-box object).
+•  We must also create related EmailMessageRelation records to link the email to the correct Account and Contact.
+•  This functionality applies to EM, GM, and IB teams.
+•  For NCM: Sync everything automatically.
+•  For IB/GM: Provide user option via right-click context menu in Outlook to selectively sync individual emails.
+Core Functionality to Implement:
+1.  Right-click Context Menu in Outlook
+	•  Add a custom “Sync to Salesforce” option when user right-clicks an email.
+	•  (Note: Outlook may not support traditional “On Create / On Open” events reliably in Exchange Online / modern Outlook. Use available event handlers or button-based triggers.)
+2.  EmailMessage Object Mapping When syncing an email, populate the following standard fields on the EmailMessage object:
+	•  Subject (Subject)
+	•  From Address (FromAddress)
+	•  From Name (FromName)
+	•  To Address (ToAddress)
+	•  Cc Address (CcAddress)
+	•  Bcc Address (BccAddress)
+	•  Message Body / HTML Body (TextBody or HtmlBody)
+	•  Sent Date (MessageDate)
+	•  Incoming / Outgoing flag (Incoming)
+	•  Has Attachment (HasAttachment)
+	•  Any other relevant standard fields
+3.  EmailMessageRelation Records
+	•  Create EmailMessageRelation records to link the EmailMessage to:
+		•  Related Contact (based on email address matching)
+		•  Related Account (via the Contact or direct lookup)
+	•  Similar to how EventRelation works for calendar events.
+4.  Logic Flow
+	•  User selects one or more emails in Outlook → right-clicks → chooses “Sync to Salesforce”
+	•  Extract all relevant email properties
+	•  Map them to Salesforce EmailMessage object
+	•  Create the EmailMessage record
+	•  Create corresponding EmailMessageRelation records
+	•  Show success/error feedback to the user
+Technical Notes:
+•  Do not rely on Outlook “Item Add”, “Item Open”, or similar events if they are unreliable in Exchange Online.
+•  Focus on manual trigger via custom ribbon button or context menu.
+•  Handle both sent and received emails correctly (set Incoming flag appropriately).
+•  Properly handle attachments if required (at minimum, set HasAttachment flag).
+•  Ensure email addresses are matched to existing Salesforce Contacts.
+Deliverables:
+Please provide:
+1.  The complete code structure (VBA / Office JS / C# — whichever is most appropriate for modern Outlook add-in)
+2.  Field mapping table (Outlook property → Salesforce EmailMessage field)
+3.  Logic for creating EmailMessageRelation records
+4.  Error handling and user feedback mechanism
+5.  Any necessary Salesforce configuration notes (permissions, field access, etc.)
+Start by first creating the EmailMessage mapping and EmailMessageRelation creation logic, as this is the core that needs to be tested independently of the Outlook event hook.
+Once the core sync works, we can focus on the right-click integration.
+
