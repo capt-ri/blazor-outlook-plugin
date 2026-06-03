@@ -192,3 +192,407 @@
   </VersionOverrides>
 
 </OfficeApp>
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRODUCTION MANIFEST TEMPLATE
+  
+  Before deployment, replace ALL placeholder values:
+  1. Generate a new GUID at https://www.guidgenerator.com/
+  2. Replace GM_DOMAIN.com with your actual domain
+  3. Ensure all icon files are uploaded to your server
+  4. Update SupportUrl to a real support page
+  
+  For local development, use manifest.dev.xml instead.
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+  xsi:type="MailApp">
+
+  <!-- REQUIRED: Generate a unique GUID at https://www.guidgenerator.com/ -->
+  <Id>2703fa7a-7b62-4d91-95a8-f3ea65f302be</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Nomura Global Markets</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Salesforce Sync - GM"/>
+  <Description DefaultValue="Activity Planner for Global Markets division. Connect your email to Salesforce with contextual data and activity tracking."/>
+
+  <!-- REQUIRED: Replace with your production URLs -->
+  <IconUrl DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/icons/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/icons/icon-128.png"/>
+  <SupportUrl DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/support"/>
+
+  <AppDomains>
+    <AppDomain>http://int-intranet.nomuranow.com/orcasgmplugin</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin"/>
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <Permissions>ReadWriteItem</Permissions>
+
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+    <Rule xsi:type="ItemIs" ItemType="Appointment" FormType="Read"/>
+  </Rule>
+
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.3">
+        <bt:Set Name="Mailbox"/>
+      </bt:Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <!-- Message Read -->
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgReadGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="msgReadOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Message Compose -->
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgComposeGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="msgComposeOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Appointment Organizer -->
+          <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="apptOrganizerGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="apptOrganizerOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Appointment Attendee -->
+          <ExtensionPoint xsi:type="AppointmentAttendeeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="apptAttendeeGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="apptAttendeeOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <!-- REQUIRED: Replace with your production icon URLs -->
+        <bt:Image id="Icon.16x16" DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/icons/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/icons/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin/icons/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <!-- REQUIRED: Replace with your production app URL -->
+        <bt:Url id="Taskpane.Url" DefaultValue="http://int-intranet.nomuranow.com/orcasgmplugin"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GroupLabel" DefaultValue="CRM Insight"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="CRM Insight"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open CRM Insight to view contextual CRM data and track emails"/>
+      </bt:LongStrings>
+    </Resources>
+
+  </VersionOverrides>
+
+</OfficeApp>
+
+
+----------------------------------------------
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRODUCTION MANIFEST TEMPLATE
+  
+  Before deployment, replace ALL placeholder values:
+  1. Generate a new GUID at https://www.guidgenerator.com/
+  2. Replace IB_DOMAIN.com with your actual domain
+  3. Ensure all icon files are uploaded to your server
+  4. Update SupportUrl to a real support page
+  
+  For local development, use manifest.dev.xml instead.
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+  xsi:type="MailApp">
+
+  <!-- REQUIRED: Generate a unique GUID at https://www.guidgenerator.com/ -->
+  <Id>1f7ee487-f06e-4075-856b-e31f66427377</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Nomura Investment Banking</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Salesforce Sync - IB"/>
+  <Description DefaultValue="Meeting Planner for Investment Banking division. Connect your email to Salesforce with contextual data and meeting tracking."/>
+
+  <!-- REQUIRED: Replace with your production URLs -->
+  <IconUrl DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/icons/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/icons/icon-128.png"/>
+  <SupportUrl DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/support"/>
+
+  <AppDomains>
+    <AppDomain>http://int-intranet.nomuranow.com/orcasibplugin</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin"/>
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <Permissions>ReadWriteItem</Permissions>
+
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+    <Rule xsi:type="ItemIs" ItemType="Appointment" FormType="Read"/>
+  </Rule>
+
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.3">
+        <bt:Set Name="Mailbox"/>
+      </bt:Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <!-- Message Read -->
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgReadGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="msgReadOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Message Compose -->
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgComposeGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="msgComposeOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Appointment Organizer -->
+          <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="apptOrganizerGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="apptOrganizerOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <!-- Appointment Attendee -->
+          <ExtensionPoint xsi:type="AppointmentAttendeeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="apptAttendeeGroup">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="apptAttendeeOpenPaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <!-- REQUIRED: Replace with your production icon URLs -->
+        <bt:Image id="Icon.16x16" DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/icons/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/icons/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin/icons/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <!-- REQUIRED: Replace with your production app URL -->
+        <bt:Url id="Taskpane.Url" DefaultValue="http://int-intranet.nomuranow.com/orcasibplugin"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GroupLabel" DefaultValue="CRM Insight"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="CRM Insight"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open CRM Insight to view contextual CRM data and track emails"/>
+      </bt:LongStrings>
+    </Resources>
+
+  </VersionOverrides>
+
+</OfficeApp>
