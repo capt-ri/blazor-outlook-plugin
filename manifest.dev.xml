@@ -1,32 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  DEVELOPMENT MANIFEST
-  This manifest is for local development and testing only.
-  Use manifest.xml (production template) for deployment.
+  PRODUCTION MANIFEST TEMPLATE
   
-  Note: The office-addin-manifest validator will show errors for localhost URLs.
-  This is expected - localhost works for sideloading during development.
+  Before deployment, replace ALL placeholder values:
+  1. Generate a new GUID at https://www.guidgenerator.com/
+  2. Replace IB_DOMAIN.com with your actual domain
+  3. Ensure all icon files are uploaded to your server
+  4. Update SupportUrl to a real support page
+  
+  For local development, use manifest.dev.xml instead.
 -->
 <OfficeApp
   xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
   xsi:type="MailApp">
 
-  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <!-- REQUIRED: Generate a unique GUID at https://www.guidgenerator.com/ -->
+  <Id>1f7ee487-f06e-4075-856b-e31f66427377</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>CRM Insight</ProviderName>
+  <ProviderName>Nomura Investment Banking</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="CRM Insight"/>
-  <Description DefaultValue="Connect your email to your CRM with contextual data and sales engagement tools."/>
+  <DisplayName DefaultValue="Salesforce Sync - IB"/>
+  <Description DefaultValue="Meeting Planner for Investment Banking division. Connect your email to Salesforce with contextual data and meeting tracking."/>
 
-  <IconUrl DefaultValue="https://localhost:5001/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:5001/icon-128.png"/>
-  <SupportUrl DefaultValue="https://localhost:5001"/>
+  <!-- REQUIRED: Replace with your production URLs -->
+  <IconUrl DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/icons/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/icons/icon-128.png"/>
+  <SupportUrl DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/support"/>
 
   <AppDomains>
-    <AppDomain>https://localhost:5001</AppDomain>
+    <AppDomain>https://int-apps.nomuranow.com/orcasibplugin</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -42,7 +46,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:5001"/>
+        <SourceLocation DefaultValue="https://int-apps.nomuranow.com/orcasibplugin"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -55,11 +59,9 @@
     <Rule xsi:type="ItemIs" ItemType="Appointment" FormType="Read"/>
   </Rule>
 
-  <DisableEntityHighlighting>false</DisableEntityHighlighting>
-
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.7">
+      <bt:Sets DefaultMinVersion="1.3">
         <bt:Set Name="Mailbox"/>
       </bt:Sets>
     </Requirements>
@@ -67,6 +69,7 @@
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
+          <!-- Message Read -->
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="msgReadGroup">
@@ -90,6 +93,7 @@
             </OfficeTab>
           </ExtensionPoint>
 
+          <!-- Message Compose -->
           <ExtensionPoint xsi:type="MessageComposeCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="msgComposeGroup">
@@ -113,6 +117,7 @@
             </OfficeTab>
           </ExtensionPoint>
 
+          <!-- Appointment Organizer -->
           <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="apptOrganizerGroup">
@@ -136,6 +141,7 @@
             </OfficeTab>
           </ExtensionPoint>
 
+          <!-- Appointment Attendee -->
           <ExtensionPoint xsi:type="AppointmentAttendeeCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="apptAttendeeGroup">
@@ -165,12 +171,14 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:5001/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:5001/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:5001/icon-80.png"/>
+        <!-- REQUIRED: Replace with your production icon URLs -->
+        <bt:Image id="Icon.16x16" DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/icons/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/icons/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://int-apps.nomuranow.com/orcasibplugin/icons/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:5001"/>
+        <!-- REQUIRED: Replace with your production app URL -->
+        <bt:Url id="Taskpane.Url" DefaultValue="https://int-apps.nomuranow.com/orcasibplugin"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="CRM Insight"/>
