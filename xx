@@ -28,6 +28,7 @@
     - **Cancel the meeting update** entirely.
 - This is a **fail-safe** — errors are surfaced to the user in real time before anything is pushed to Salesforce.
 - The plugin will show this error even if the user did not explicitly open the plugin — because the plugin is always running in the background.
+- For recurring meetings synced by the sync engine, only the **specific failing occurrence** is affected — not the entire series.
 
 -----
 
@@ -37,35 +38,54 @@
 
 - When a recurring meeting is created, the **master event must NOT be pushed to Salesforce**.
 - The plugin sends the **master event to ORCAS only**.
-- ORCAS stores the master and is responsible for **pushing individual occurrences** to Salesforce.
+- ORCAS stores the master, then on its next cycle connects to Exchange, retrieves all occurrences, and **pushes them to Salesforce**.
 
 ### Occurrences
 
 - ORCAS creates and manages all occurrences in Salesforce.
 - The plugin **never pushes occurrences directly** to Salesforce.
+- This was a point of confusion between Roman and Sanika — confirmed: the plugin does **not** directly push occurrences to Salesforce at any point.
 
-### Amendments & Modifications
+### Amendments & Modifications — Clarified
 
-- Any amendments to a recurring meeting are handled by the **plugin only**.
-- However, the plugin **must inform ORCAS** of any modification it makes — so the sync engine does not try to re-sync the same change in its next cycle.
+This was a key point of confusion. The original notes said *“amendments to recurring meetings are handled by the plugin only”* which seemed to contradict the modified occurrences row in the routing table. Here is the correct understanding confirmed by Vipin:
+
+- The **plugin handles the amendment** (i.e., it is the one pushing the change to Salesforce).
+- But it **must also notify ORCAS** and record it as “synced” in the ORCAS database.
+- This applies to **all meetings**, not just recurring — because when “sync meetings” is selected, the plugin captures any and every modification.
+- The two steps (plugin pushes + notifies ORCAS) happen together — they are not contradictory.
 
 ### Modified Occurrences (Exceptions)
 
-- If a single occurrence within a recurring series is modified, the plugin sends the **full details to ORCAS**.
+- If a single occurrence within a recurring series is modified, the plugin sends **full details to ORCAS**.
 - ORCAS then pushes the change to Salesforce and stores the SF ID.
 
 ### Occurrence Deletions
 
 - If an occurrence is deleted, the plugin sends a **delete notification to ORCAS**.
 - ORCAS deletes it from Salesforce and marks it as deleted in the database.
+- If the plugin were to delete directly without telling ORCAS, the sync engine would never know the event was deleted — causing data inconsistency.
 
 -----
 
 ## Why the Plugin Must Notify ORCAS
 
-- ORCAS runs a **background sync cycle** that periodically checks Outlook for changes since the last run.
-- If the plugin modifies a recurring meeting in Salesforce **without notifying ORCAS**, the sync engine will detect the change in its next cycle and attempt to sync it again — causing a **conflict/double-sync**.
-- To prevent this, anything the plugin syncs to Salesforce must be **recorded in the ORCAS database as “synced”** so the sync engine skips it.
+- ORCAS runs a **background sync cycle** that checks Outlook for any changes since the last run.
+- If the plugin modifies or syncs something to Salesforce **without notifying ORCAS**, the sync engine will detect the change in its next cycle and attempt to sync it again — causing a **double-sync conflict**.
+- To prevent this, anything the plugin syncs to Salesforce must be **recorded in the ORCAS database as “synced”** so the sync engine skips it entirely.
+- Most of the time, the sync engine will do nothing — its main job is handling **new recurring master events**. Everything else is handled by the plugin, as long as it properly notifies ORCAS.
+
+-----
+
+## Salesforce ID — New Requirement (from Sanika & Roman discussion)
+
+- Previously, the plugin never needed to track the **Salesforce ID** — it was not useful to it.
+- Now that ORCAS is in the picture, the plugin must:
+1. Push the event to Salesforce.
+1. **Capture the SF ID** returned by Salesforce.
+1. Send the SF ID along with other fields (user email, Exchange ID, etc.) to ORCAS.
+- ORCAS uses the SF ID to identify and update the correct record in Salesforce on future cycles.
+- Sanika confirmed that Salesforce always returns an ID after a save — Roman needs to ensure this is captured and passed through.
 
 -----
 
@@ -73,15 +93,88 @@
 
 - Roman must **explicitly track the recurring flag** in the plugin.
 - This flag determines whether the master event is held back from Salesforce and routed to ORCAS instead.
-- This is considered a **minor change** but is critical to the correct routing behavior.
+- This is considered a **minor change** but is critical to correct routing behavior.
 
 -----
 
 ## Event Routing Summary
 
-|Event Type                         |Plugin does                                     |ORCAS does                              |
-|-----------------------------------|------------------------------------------------|----------------------------------------|
-|**Single create/update/delete**    |Pushes to SF directly, notifies ORCAS with SF ID|Stores record, skips on background cycle|
-|**Recurring master**               |Sends to ORCAS only                             |Stores master, pushes occurrences       |
-|**Exception (modified occurrence)**|Sends full details to ORCAS                     |Pushes to SF, stores SF ID              |
-|**Occurrence deletion**            |Sends delete notification to ORCAS              |Deletes from SF, marks deleted          |
+|Event Type                         |Plugin does                                     |ORCAS does                                    |
+|-----------------------------------|------------------------------------------------|----------------------------------------------|
+|**Single create/update/delete**    |Pushes to SF directly, notifies ORCAS with SF ID|Stores record, skips on background cycle      |
+|**Recurring master**               |Sends to ORCAS only                             |Stores master, pushes occurrences via Exchange|
+|**Exception (modified occurrence)**|Sends full details to ORCAS                     |Pushes to SF, stores SF ID                    |
+|**Occurrence deletion**            |Sends delete notification to ORCAS              |Deletes from SF, marks deleted                |
+
+-----
+
+## Open Items & Next Steps
+
+|Who               |What                                                                                                                                |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------|
+|**Roman**         |Track recurring flag; ensure master event is never pushed directly to Salesforce                                                    |
+|**Roman**         |Capture and pass SF ID back to ORCAS after every Salesforce push                                                                    |
+|**Roman**         |Confirm with pilot user that deployed plugin is visible and working                                                                 |
+|**Roman & Sanika**|Run mock exercise — Roman syncs meetings to Salesforce; Sanika’s sync engine captures them; test recurring master flow to ORCAS only|
+|**Sanika**        |Confirm fields needed from Roman (user email, Exchange ID, SF ID, etc.) are sufficient for ORCAS to function                        |
+
+
+
+-----/
+
+Based on both conversations, here’s what needs to be clarified with Vipin:
+
+🔴 Key Open Question — Recurring Meeting Modifications
+
+The main point of confusion between you and Sanika:
+
+Does the plugin push changes/modifications to a recurring meeting directly to Salesforce, or does everything go through ORCAS/sync engine?
+
+The current notes say “amendments to recurring meetings are handled by the plugin only” — but this seems to contradict the modified occurrences row in Sanika’s table (which routes exceptions through ORCAS).
+
+Sanika’s current assumption is:
+
+	•	Plugin never pushes occurrences or their changes directly to Salesforce
+	•	Everything related to recurring meetings flows through the sync engine
+	•	If plugin bypasses ORCAS for deletions, the sync engine would never know the event was deleted
+
+This needs Vipin’s confirmation.
+
+🟡 Secondary Clarification — Salesforce ID
+
+	•	When the plugin pushes a single event to Salesforce, it needs to capture the SF ID back and send it to ORCAS
+	•	Previously the plugin never needed to track the SF ID — this is a new requirement now that ORCAS is in the picture
+	•	Sanika needs Roman to confirm he can retrieve and pass the SF ID along with other fields (user email, exchange ID, etc.)
+
+In short, the single biggest thing to confirm with Vipin is: does the plugin ever talk directly to Salesforce for recurring meeting changes, or does 100% of that go through ORCAS?
+
+----
+
+Yes! Vipin actually did address the key question in yesterday’s meeting. Here’s what was clarified:
+
+✅ Amendments to Recurring Meetings — Resolved
+
+Vipin explicitly said:
+
+“The forwards and amendments to any meeting will be handled by the plugin only”
+
+But then immediately added:
+
+“Roman, any amendments to a recurring meeting should flow back to the database”
+
+So the answer is:
+
+	•	Plugin handles the amendment (pushes to Salesforce)
+	•	But it must notify ORCAS so the database records it as “synced”
+	•	This applies to all meetings, not just recurring — because the plugin syncs any and every modification when “sync meetings” is selected
+
+✅ Why Notification to ORCAS is Critical — Also Resolved
+
+Vipin explained the risk clearly:
+
+	•	If the plugin modifies a meeting in Salesforce without telling ORCAS, the sync engine will detect the change in its next cycle and try to sync it again — causing a conflict
+	•	So the plugin must mark it as “synced” in the ORCAS database so the sync engine skips it
+
+So the “contradiction” you and Sanika were confused about is actually not a contradiction — the plugin handles the amendment AND notifies ORCAS. Both things happen together. No need to escalate this to Vipin — it was already answered.
+
+
