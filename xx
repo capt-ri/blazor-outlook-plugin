@@ -1,0 +1,87 @@
+# Plugin & Recurring Meeting — Detailed Notes
+
+-----
+
+## Plugin Overview
+
+- The plugin lives inside **Outlook** and is **always on** — it cannot be selectively turned off.
+- It is always connected to Salesforce regardless of which account the user is logged into.
+- When a user opens a meeting in Outlook, the plugin panel activates automatically and captures all changes.
+- The **optionality to sync** (choosing when to sync) applies to **emails only**, not meetings — for meetings, the plugin captures everything automatically.
+
+-----
+
+## Plugin Deployment
+
+- The plugin was **deployed** at the time of the meeting.
+- Roman to confirm with the pilot user the next day whether the plugin is visible and functioning.
+- Once confirmed → **“we are in business”**.
+
+-----
+
+## How the Plugin Handles Errors
+
+- If a meeting contains a contact that **does not exist in Salesforce**, the plugin:
+  - Immediately **flashes the error** on the Outlook panel.
+  - Gives the user two options:
+    - **Create the contact** in Salesforce, or
+    - **Cancel the meeting update** entirely.
+- This is a **fail-safe** — errors are surfaced to the user in real time before anything is pushed to Salesforce.
+- The plugin will show this error even if the user did not explicitly open the plugin — because the plugin is always running in the background.
+
+-----
+
+## Recurring Meeting — How It Works
+
+### Master Event
+
+- When a recurring meeting is created, the **master event must NOT be pushed to Salesforce**.
+- The plugin sends the **master event to ORCAS only**.
+- ORCAS stores the master and is responsible for **pushing individual occurrences** to Salesforce.
+
+### Occurrences
+
+- ORCAS creates and manages all occurrences in Salesforce.
+- The plugin **never pushes occurrences directly** to Salesforce.
+
+### Amendments & Modifications
+
+- Any amendments to a recurring meeting are handled by the **plugin only**.
+- However, the plugin **must inform ORCAS** of any modification it makes — so the sync engine does not try to re-sync the same change in its next cycle.
+
+### Modified Occurrences (Exceptions)
+
+- If a single occurrence within a recurring series is modified, the plugin sends the **full details to ORCAS**.
+- ORCAS then pushes the change to Salesforce and stores the SF ID.
+
+### Occurrence Deletions
+
+- If an occurrence is deleted, the plugin sends a **delete notification to ORCAS**.
+- ORCAS deletes it from Salesforce and marks it as deleted in the database.
+
+-----
+
+## Why the Plugin Must Notify ORCAS
+
+- ORCAS runs a **background sync cycle** that periodically checks Outlook for changes since the last run.
+- If the plugin modifies a recurring meeting in Salesforce **without notifying ORCAS**, the sync engine will detect the change in its next cycle and attempt to sync it again — causing a **conflict/double-sync**.
+- To prevent this, anything the plugin syncs to Salesforce must be **recorded in the ORCAS database as “synced”** so the sync engine skips it.
+
+-----
+
+## Recurring Flag — Roman’s Responsibility
+
+- Roman must **explicitly track the recurring flag** in the plugin.
+- This flag determines whether the master event is held back from Salesforce and routed to ORCAS instead.
+- This is considered a **minor change** but is critical to the correct routing behavior.
+
+-----
+
+## Event Routing Summary
+
+|Event Type                         |Plugin does                                     |ORCAS does                              |
+|-----------------------------------|------------------------------------------------|----------------------------------------|
+|**Single create/update/delete**    |Pushes to SF directly, notifies ORCAS with SF ID|Stores record, skips on background cycle|
+|**Recurring master**               |Sends to ORCAS only                             |Stores master, pushes occurrences       |
+|**Exception (modified occurrence)**|Sends full details to ORCAS                     |Pushes to SF, stores SF ID              |
+|**Occurrence deletion**            |Sends delete notification to ORCAS              |Deletes from SF, marks deleted          |
