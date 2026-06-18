@@ -1,3 +1,26 @@
+Here’s what Vipin is asking you to do:
+
+The task: Take the existing plugin code (the COM add-in — the GM, IB, and dotnet VSTO files) and feed it to Claude to get an analysis of what changes are needed to make it lightweight, fast-loading, and stable on Outlook 365.
+
+Key constraints:
+
+	•	Do NOT implement anything yet — analysis only
+	•	Focus on performance and reliability
+	•	The current plugin has serious issues: it crashes and takes Outlook down with it, and Outlook sometimes auto-disables it because it loads too slowly
+	•	These are expected problems given it’s a COM add-in
+	•	He also wants a “Plan B” — what are the fallback options if the plugin doesn’t show up at all
+
+How he wants you to work:
+
+	•	Feed the code to Claude and get recommendations
+	•	Don’t take the output at face value — challenge and question the suggestions repeatedly until the strategy feels robust
+	•	Have Claude create a document with the findings
+	•	Keep him posted on progress
+
+So your next step is to gather those plugin code files and start a focused analysis session. Want me to help with that analysis once you have the code ready?
+
+------
+
 # Plugin & Recurring Meeting — Detailed Notes
 
 -----
