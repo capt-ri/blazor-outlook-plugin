@@ -200,4 +200,6 @@ Vipin explained the risk clearly:
 
 So the “contradiction” you and Sanika were confused about is actually not a contradiction — the plugin handles the amendment AND notifies ORCAS. Both things happen together. No need to escalate this to Vipin — it was already answered.
 
+-----------------------------------------------
 
+hi Roman, on the plugin we need to show a banner a loud and bold one to say if an email or calendar invite has been already sync'd to Salesforce. For email if it is not opened and user right clicks and tries to sync it should throw a message box saying the email is sync'd. We can probably make use of message id
